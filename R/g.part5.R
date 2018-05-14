@@ -349,11 +349,11 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
             # 180 min in steps of 5 min; best-fit criterion was the maximal Munich Rhythmicity Index (MRI = range of oscillation3r) that represented
             # a peak. The bivariate correlation coefficient r for the best-fit was > 0.4 for 75% of all bouts of 3-12 hr; the cosine fit was statistically
             # significant at p < 0.05 for 91% of bouts of 3-12 hr.
-          
+            
             
             
             kkkk
-            # pmin(1/ACC_SPT, 1/0.01)
+            
             #=======================================================
             for (TRLi in threshold.lig) {
               for (TRMi in threshold.mod) {
