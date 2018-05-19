@@ -333,25 +333,27 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
             
             #=======================================================
             # Insert here sleep structure calculations:
-            ACC_SPT = ACC[1:(24*60*12)][which(diur[1:(24*60*12)] == 1)]
-            
-            bincla = ifelse(ACC_SPT < 30, 1, 0) # turn into binary classify per epoch
-            bincla2 = zoo::rollsum(x=bincla,k=(60*10)/ws3) # 10 minute rolling sum
-            LIDS = (10*(60/ws3)) / (bincla2 + 1)
-            LIDS2 = zoo::rollmean(x=LIDS,k=(60*30)/ws3) # 30 minute rolling average
-            
-            x11()
-            par(mfrow=c(2,2))
-            plot(LIDS2,type="l",main="Figure 1E")
-            
-            # now normalise to LIDS cycle as in Figure 1F
-            # Description in paper: The best-fit cosine model was determined by iterative fitting of a 1-harmonic cosine model [30] to LIDS with periods from 30 to
-            # 180 min in steps of 5 min; best-fit criterion was the maximal Munich Rhythmicity Index (MRI = range of oscillation3r) that represented
-            # a peak. The bivariate correlation coefficient r for the best-fit was > 0.4 for 75% of all bouts of 3-12 hr; the cosine fit was statistically
-            # significant at p < 0.05 for 91% of bouts of 3-12 hr.
-            
-            
-            
+            select = (24*60*12):((48*60*12)+1)
+            ACC_SPT = ACC[select][which(diur[select] == 1)]
+            write.csv(ACC_SPT,file="/home/vincent/accsptexmaple.csv",row.names = FALSE)
+            # bincla = ifelse(ACC_SPT < 30, 1, 0) # turn into binary classify per epoch
+            # bincla2 = zoo::rollsum(x=bincla,k=(60*10)/ws3) # 10 minute rolling sum
+            # LIDS = (10*(60/ws3)) / (bincla2 + 1) #max value devided by (score + 1)
+            # LIDS2 = zoo::rollmean(x=LIDS,k=(60*30)/ws3) # 30 minute rolling average
+            # 
+            # x11()
+            # par(mfrow=c(2,1))
+            # plot(LIDS,type="l",main="Figure 1E")
+            # plot(LIDS2,type="l",main="Figure 1E")
+            # 
+            # # now normalise to LIDS cycle as in Figure 1F
+            # # Description in paper: The best-fit cosine model was determined by iterative fitting of a 1-harmonic cosine model [30] to LIDS with periods from 30 to
+            # # 180 min in steps of 5 min; best-fit criterion was the maximal Munich Rhythmicity Index (MRI = range of oscillation3r) that represented
+            # # a peak. The bivariate correlation coefficient r for the best-fit was > 0.4 for 75% of all bouts of 3-12 hr; the cosine fit was statistically
+            # # significant at p < 0.05 for 91% of bouts of 3-12 hr.
+            # 
+            # 
+            # 
             kkkk
             
             #=======================================================
