@@ -10,7 +10,6 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                    winhr = 5,
                    M5L5res = 10,
                    overwrite=FALSE,desiredtz="Europe/London",bout.metric=4, dayborder = 0, save_ms5rawlevels = FALSE) {
-  
   # description: function called by g.shell.GGIR
   # aimed to merge the milestone output from g.part2, g.part3, and g.part4
   # in order to create a merged report of both physical activity and sleep
@@ -253,6 +252,7 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
           }
           # update variable sibdetection
           sibdetection[redo1:redo2] = sdl1
+          # if (length(sibdetection == 1) > 0) ACC[sibdetectison == 1] = 0 #turn all acceleration to zero if sustained inactivity bouts are detected
           #========================================================
           # DIURNAL BINARY CLASSIFICATION INTO SLEEP OR WAKE PERIOD 
           # Note that the sleep date timestamp corresponds to day before night
@@ -330,29 +330,6 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
             } else if (waketi > 0 & onseti > 0) { # added 20/4/2018 by VvH
               diur[onseti:waketi] = 1
             }
-            
-            #=======================================================
-            # Insert here sleep structure calculations:
-            select = (24*60*12):((48*60*12)+1)
-            ACC_SPT = ACC[select][which(diur[select] == 1)]
-            write.csv(ACC_SPT,file="/home/vincent/accsptexmaple2.csv",row.names = FALSE)
-            
-            # 1. Assess  whether ACC_SPT should be numbered in sleep
-            # bouts (segments of SPT that can be split by 30 minutes of wakefullness and the bout is at least 3 hours).
-            # 2. Apply LIDS analysis per bout
-            
-            
-            # 
-            # # now normalise to LIDS cycle as in Figure 1F
-            # # Description in paper: The best-fit cosine model was determined by iterative fitting of a 1-harmonic cosine model [30] to LIDS with periods from 30 to
-            # # 180 min in steps of 5 min; best-fit criterion was the maximal Munich Rhythmicity Index (MRI = range of oscillation3r) that represented
-            # # a peak. The bivariate correlation coefficient r for the best-fit was > 0.4 for 75% of all bouts of 3-12 hr; the cosine fit was statistically
-            # # significant at p < 0.05 for 91% of bouts of 3-12 hr.
-            # 
-            # 
-            # 
-            kkkk
-            
             #=======================================================
             for (TRLi in threshold.lig) {
               for (TRMi in threshold.mod) {
@@ -736,6 +713,87 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                         #===============================================
                         NANS = which(is.nan(dsummary[di,]) == TRUE) #average of no values will results in NaN
                         if (length(NANS) > 0) dsummary[di,NANS] = ""        
+                        #===============================================
+                        # LIDS analysis
+                        #=======================================================
+                        if (timewindowi == "WW") { # only do these analyses when timewindow is defined as WW
+                          # Extract level and acc for the night
+                          accnight = ACC[sse][which(diur[sse] == 1)] # select acceleration from the night
+                          levelsnight = LEVELS[sse][which(diur[sse] == 1)] # select acceleration from the night
+                          # Detect sleep bouts (here defined as blocks of at least 3 hours with < 30% wakefullness):
+                          # first distinguish wakefullness from sleep using the classifications from GGIR::g.part3:
+                          levelsnightBinary = ifelse(test=levelsnight==0,yes = 0,no = 1) #sleep = 0, wake = 1
+                          # smooth this to consider 30+ minute blocks of sleep with less than 30% wakefullness as sleep
+                          levelsnightBinary = zoo::rollmean(x=levelsnightBinary,k=(30*(60/ws3)),fill = "extend")
+                          # TODO: reverse this to 0.3,
+                          levelsnightBinary = c(1,0,ifelse(test=levelsnightBinary<0.7,yes = 0,no = 1),rep(1,60*(60/ws3)),0,1)
+                          x11()
+                          plot(levelsnightBinary,type="l")
+                          # now: sleep = 0, wake = 1, not that I add the 40 minutes of wakefullness at the end
+                          # as a trick to ease detection of sleep bouts
+                          # levelsnightBinary = c(1,rep(0,1200),rep(1,40),rep(0,1400),rep(1,35),rep(0,40),1)
+                          # ws3 = 5
+                          sleepbouts = matrix(0,20,2)
+                          sleepbouti = 1
+                          print(ws3)
+                          if (length(levelsnightBinary == 0) > 0) { # we are interested in the blocks of zero
+                            changepoints = which(abs(diff(levelsnightBinary)) == 1) # where does value change?
+                            blocklengthsWake = diff(changepoints)[seq(2,length(changepoints)-1,by=2)] # what are the wake block lengths?
+                            longWake = which(blocklengthsWake > (30 * (60/ws3))) # what are the longer wake block lengths
+                            for (LWi in 1:length(longWake)) {
+                              B = changepoints[((longWake[LWi]*2)-1):((longWake[LWi]*2))] # get the interval before the longer blocklengths
+                              print(paste0(diff(B) / (60*(60/ws3))," hours"))
+                              if (diff(B) > (60*3*(60/ws3))) { # check whether it is at least 3 hours long
+                                sleepbouts[sleepbouti,] = B
+                                sleepbouti = sleepbouti + 1
+                              } else {
+                              }
+                            }
+                          }
+                          # 2. Apply LIDS analysis per bout
+                          if (length(which(sleepbouts[,1] != 0)) > 0) {
+                            accnight = accnight[sleepbouts[1,1]:sleepbouts[1,2]]
+                            # TO DO: This currently only considers the first sleep bout,
+                            # implement loop to analyse all sleep bouts
+                            
+                            
+                            x11()
+                            par(mfrow=c(2,2),pch=20)
+                            plot(LEVELS[sse][which(diur[sse] == 1)],main="LEVELS")
+                            plot(diur[sse][which(diur[sse] == 1)],main="diur")
+                            plot(levelsnightBinary,main="bin")
+                            plot(ACC[sse][which(diur[sse] == 1)],main="ACC",type="l")
+                            timelinebout = sleepbouts[1,1]:sleepbouts[1,2]
+                            boutline = rep(200,diff(sleepbouts[1,])+1)
+                            lines(timelinebout,boutline,type="l",col="red")
+                            
+                            LIDSvars = g.LIDS.analyse(acc=accnight,ws3=ws3)
+                            
+                            #TO DO: tidy up last simulated data appended to the end
+                            fit = lm(LIDSvars$LIDSfitted ~ LIDSvars$cycle)
+                            
+                            print(summary(fit))
+                            maxperiod = max(LIDSvars$period,na.rm = TRUE)
+                            print(paste0("Period: ",maxperiod))
+                            
+                            epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
+                            time_LIDS = LIDSvars$time
+                            x11()
+                            par(mfrow=c(2,2),mar=c(4,4,4,1))
+                            plot(time_LIDS, LIDSvars$LIDSraw, type="l",main="LIDS",col="black",ylab="LIDS score",xlab="time (minutes)",bty="l")
+                            lines(time_LIDS, LIDSvars$LIDSfitted + LIDSvars$DC,type="l",col="blue",ylab="LIDS raw")
+                            legend("bottomright",legend = c("LIDS raw","LIDS fitted"),col=c("black","blue"),lty = c(1,1),cex=0.8)
+                            plot(LIDSvars$cycle_interpol, LIDSvars$LIDSfitted_abs_norm_interpol,type="l",main="LIDS",ylab="LIDS score",xlab="cycle",bty="l",col="blue")
+                            legend("bottomright",legend = c("LIDS raw"),col=c("blue"),lty = c(1,1),cex=0.8)
+                            plot(time_LIDS,LIDSvars$period,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="time (minutes)",bty="l")
+                            plot(LIDSvars$cycle_interpol,LIDSvars$LIDSperiod_interpol,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="cycle",bty="l")
+                          } else {
+                            print("no sleep bouts found")
+                          }
+                        }
+                        kkkk # force code to stop here, while this part under development
+                        
+                        
                         #===============================================
                         # NUMBER OF BOUTS
                         checkshape = function(boutcount) {
