@@ -62,9 +62,14 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5) {
     a = mean(a_t) * 2; b = mean(b_t) * 2
     # Step 6. calculate ft for each time point based on local a and b:
     ft = a * cos(norm_t) + b * sin(norm_t)
-    ct = cor.test(ft,x)
-    pvalue = ct$p.value
-    cor = ct$estimate
+    if (sd(ft) == 0 | sd(x) == 0) {
+      cor = 0
+      pvalue = 1
+    } else {
+      ct = cor.test(ft,x)
+      pvalue = ct$p.value
+      cor = ct$estimate
+    }
     # Note: we do not multiply the correlation by the range in the data
     # because that seems to result in a very eratic score.
     phase= atan(a/b) # should always be: -pi/2 < phase < pi/2
@@ -96,6 +101,12 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5) {
     }
   }
   LIDSvars$LIDSraw = LIDSraw
+  # remove Plateau at the end
+  lastvalue = LIDSvars$LIDSraw[length(LIDSvars$LIDSraw)]
+  startPlateau = length(LIDSvars$LIDSraw) - which((rev(LIDSvars$LIDSraw)==lastvalue) == FALSE)[1]
+  if (startPlateau < length(LIDSvars$LIDSraw)) {
+    LIDSvars = LIDSvars[1:startPlateau,] 
+  }
   LIDSvars = LIDSvars[which(LIDSvars$cor > 0.8)[1]:nrow(LIDSvars),]
   LIDSvars$cycle = c()
   LIDSvars$cycle = LIDSvars$phase + abs(min(LIDSvars$phase,na.rm = TRUE))
@@ -118,5 +129,6 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5) {
   # interpolate period
   A = approx(LIDSvars$cycle,LIDSvars$period, xout = LIDSvars$cycle_interpol, rule = 2, method = "linear", ties = mean)
   LIDSvars$LIDSperiod_interpol = A$y
+
   return(LIDSvars)
 }

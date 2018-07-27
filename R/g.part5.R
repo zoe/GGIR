@@ -252,7 +252,7 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
           }
           # update variable sibdetection
           sibdetection[redo1:redo2] = sdl1
-          # if (length(sibdetection == 1) > 0) ACC[sibdetectison == 1] = 0 #turn all acceleration to zero if sustained inactivity bouts are detected
+          if (length(sibdetection == 1) > 0) ACC[sibdetection == 1] = 0 #turn all acceleration to zero if sustained inactivity bouts are detected
           #========================================================
           # DIURNAL BINARY CLASSIFICATION INTO SLEEP OR WAKE PERIOD 
           # Note that the sleep date timestamp corresponds to day before night
@@ -720,80 +720,64 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                           # Extract level and acc for the night
                           accnight = ACC[sse][which(diur[sse] == 1)] # select acceleration from the night
                           levelsnight = LEVELS[sse][which(diur[sse] == 1)] # select acceleration from the night
-                          # Detect sleep bouts (here defined as blocks of at least 3 hours with < 30% wakefullness):
                           # first distinguish wakefullness from sleep using the classifications from GGIR::g.part3:
-                          levelsnightBinary = ifelse(test=levelsnight==0,yes = 0,no = 1) #sleep = 0, wake = 1
-                          # smooth this to consider 30+ minute blocks of sleep with less than 30% wakefullness as sleep
-                          levelsnightBinary = zoo::rollmean(x=levelsnightBinary,k=(30*(60/ws3)),fill = "extend")
-                          # TODO: reverse this to 0.3,
-                          levelsnightBinary = c(1,0,ifelse(test=levelsnightBinary<0.7,yes = 0,no = 1),rep(1,60*(60/ws3)),0,1)
-                          x11()
-                          plot(levelsnightBinary,type="l")
-                          # now: sleep = 0, wake = 1, not that I add the 40 minutes of wakefullness at the end
-                          # as a trick to ease detection of sleep bouts
-                          # levelsnightBinary = c(1,rep(0,1200),rep(1,40),rep(0,1400),rep(1,35),rep(0,40),1)
-                          # ws3 = 5
-                          sleepbouts = matrix(0,20,2)
-                          sleepbouti = 1
-                          print(ws3)
-                          if (length(levelsnightBinary == 0) > 0) { # we are interested in the blocks of zero
-                            changepoints = which(abs(diff(levelsnightBinary)) == 1) # where does value change?
-                            blocklengthsWake = diff(changepoints)[seq(2,length(changepoints)-1,by=2)] # what are the wake block lengths?
-                            longWake = which(blocklengthsWake > (30 * (60/ws3))) # what are the longer wake block lengths
-                            for (LWi in 1:length(longWake)) {
-                              B = changepoints[((longWake[LWi]*2)-1):((longWake[LWi]*2))] # get the interval before the longer blocklengths
-                              print(paste0(diff(B) / (60*(60/ws3))," hours"))
-                              if (diff(B) > (60*3*(60/ws3))) { # check whether it is at least 3 hours long
-                                sleepbouts[sleepbouti,] = B
-                                sleepbouti = sleepbouti + 1
-                              } else {
-                              }
-                            }
-                          }
+                          WakeBinary = ifelse(test=levelsnight==0,yes = 0,no = 1) #sleep = 0, wake = 1
+                          sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.8,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
                           # 2. Apply LIDS analysis per bout
                           if (length(which(sleepbouts[,1] != 0)) > 0) {
                             accnight = accnight[sleepbouts[1,1]:sleepbouts[1,2]]
-                            # TO DO: This currently only considers the first sleep bout,
-                            # implement loop to analyse all sleep bouts
+                            # TO DO: This currently only considers the first sleep bout, implement loop to analyse all sleep bouts?
                             
-                            
-                            x11()
-                            par(mfrow=c(2,2),pch=20)
-                            plot(LEVELS[sse][which(diur[sse] == 1)],main="LEVELS")
-                            plot(diur[sse][which(diur[sse] == 1)],main="diur")
-                            plot(levelsnightBinary,main="bin")
-                            plot(ACC[sse][which(diur[sse] == 1)],main="ACC",type="l")
-                            timelinebout = sleepbouts[1,1]:sleepbouts[1,2]
-                            boutline = rep(200,diff(sleepbouts[1,])+1)
-                            lines(timelinebout,boutline,type="l",col="red")
-                            
+                            # #------------------------------
+                            # # TO DO: Remove next lines
+                            # x11()
+                            # par(mfrow=c(2,2),pch=20)
+                            # plot(LEVELS[sse][which(diur[sse] == 1)],main="LEVELS")
+                            # plot(diur[sse][which(diur[sse] == 1)],main="diur")
+                            # plot(WakeBinary,main="bin")
+                            # plot(ACC[sse][which(diur[sse] == 1)],main="ACC",type="l")
+                            # timelinebout = sleepbouts[1,1]:sleepbouts[1,2]
+                            # boutline = rep(200,diff(sleepbouts[1,])+1)
+                            # lines(timelinebout,boutline,type="l",col="red")
+                            # #-----------------------------------------
                             LIDSvars = g.LIDS.analyse(acc=accnight,ws3=ws3)
                             
                             #TO DO: tidy up last simulated data appended to the end
-                            fit = lm(LIDSvars$LIDSfitted ~ LIDSvars$cycle)
-                            
-                            print(summary(fit))
+                            fit.LIDS = lm(LIDSvars$LIDSfitted ~ LIDSvars$cycle)
                             maxperiod = max(LIDSvars$period,na.rm = TRUE)
-                            print(paste0("Period: ",maxperiod))
+                            medianperiod = median(LIDSvars$period,na.rm = TRUE)
+                            residuals = resid(fit.LIDS)
+                            MeanAmplitude = sd(residuals)
                             
-                            epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
-                            time_LIDS = LIDSvars$time
-                            x11()
-                            par(mfrow=c(2,2),mar=c(4,4,4,1))
-                            plot(time_LIDS, LIDSvars$LIDSraw, type="l",main="LIDS",col="black",ylab="LIDS score",xlab="time (minutes)",bty="l")
-                            lines(time_LIDS, LIDSvars$LIDSfitted + LIDSvars$DC,type="l",col="blue",ylab="LIDS raw")
-                            legend("bottomright",legend = c("LIDS raw","LIDS fitted"),col=c("black","blue"),lty = c(1,1),cex=0.8)
-                            plot(LIDSvars$cycle_interpol, LIDSvars$LIDSfitted_abs_norm_interpol,type="l",main="LIDS",ylab="LIDS score",xlab="cycle",bty="l",col="blue")
-                            legend("bottomright",legend = c("LIDS raw"),col=c("blue"),lty = c(1,1),cex=0.8)
-                            plot(time_LIDS,LIDSvars$period,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="time (minutes)",bty="l")
-                            plot(LIDSvars$cycle_interpol,LIDSvars$LIDSperiod_interpol,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="cycle",bty="l")
+                            # print(paste0("Linear slope (LIDS ~ cycle): ",coef(fit.LIDS)[1]))
+                            # print(paste0("Linear slope (LIDS ~ cycle): ",coef(fit.LIDS)[2]))
+                            # print(paste0("MeanAmplitude: ",MeanAmplitude))
+                            # print(paste0("Max Period: ",maxperiod))
+                            # print(paste0("Median Period: ",medianperiod))
+                            
+                            # #------------------------------
+                            # # TO DO: Remove next lines
+                            # epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
+                            # time_LIDS = LIDSvars$time
+                            # x11()
+                            # par(mfrow=c(2,2),mar=c(4,4,4,1))
+                            # plot(time_LIDS, LIDSvars$LIDSraw, type="l",main="LIDS",col="black",ylab="LIDS score",xlab="time (minutes)",bty="l")
+                            # lines(time_LIDS, LIDSvars$LIDSfitted + LIDSvars$DC,type="l",col="blue",ylab="LIDS raw")
+                            # legend("bottomright",legend = c("LIDS raw","LIDS fitted"),col=c("black","blue"),lty = c(1,1),cex=0.8)
+                            # plot(LIDSvars$cycle_interpol, LIDSvars$LIDSfitted_abs_norm_interpol,type="l",main="LIDS",ylab="LIDS score",xlab="cycle",bty="l",col="blue")
+                            # legend("bottomright",legend = c("LIDS raw"),col=c("blue"),lty = c(1,1),cex=0.8)
+                            # plot(time_LIDS,LIDSvars$period,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="time (minutes)",bty="l")
+                            # plot(LIDSvars$cycle_interpol,LIDSvars$LIDSperiod_interpol,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="cycle",bty="l")
+                            # #------------------------------
+                            # Add LIDS to summary
+                            dsummary[di,fi:(fi+4)] = c(coef(fit.LIDS),MeanAmplitude,maxperiod,medianperiod)
+                            
                           } else {
                             print("no sleep bouts found")
                           }
+                          ds_names[fi:(fi+4)] = c("LIDS_Intercept","LIDS_Slope", "LIDS_MeanAmplitude","LIDS_maxperiod","LIDS_medianperiod")
+                          fi = fi + 5
                         }
-                        kkkk # force code to stop here, while this part under development
-                        
-                        
                         #===============================================
                         # NUMBER OF BOUTS
                         checkshape = function(boutcount) {
@@ -857,7 +841,6 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                           ds_names[fi] = "foldername"; fi = fi + 1 
                         }
                         di = di + 1
-                        
                       }
                     }
                   }
@@ -873,16 +856,15 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
         }
         output = data.frame(dsummary,stringsAsFactors=FALSE)
         names(output) = ds_names
-        
-        # This is not a good solution anymore: If excludefirstlast == TRUE then part4 does not generate sleep estimates for the first and last night,
-        # therefore, part5 will also mis waking up time for the second and the beforelast day.
+        # Motivation for having a second excludefirstlast argument and not re-use the one used in part4:
+        # If excludefirstlast == TRUE then part4 does not generate sleep estimates for the first and last night,
+        # therefore, part5 will also miss waking up time for the second and the beforelast day.
         # So, I think if we want to facilitate that the first and last day are excluded in part5 then this will have to be handled
         # with a different input argument
         if (excludefirstlast.part5 == TRUE) { #undesirable because it will slowly remove alchanged to TRUE on 20 May 2015
           output = output[-c(which(output$night_number == min(output$night_number)),
                              which(output$night_number == max(output$night_number))),] #Moved here, first, it analyzes the whole measurement, then it selects the days to show
         }
-        
         # correct definition of sleep log availability for window = WW, because now it
         # also relies on sleep log from previous night
         whoareWW = which(output$window == "WW") # look up WW
