@@ -9,7 +9,7 @@
   and Roenneberg et al. http://dx.doi.org/10.1016/bs.mie.2014.11.028.
 }
 \usage{
-  g.LIDS.analyse(acc = c(), ws3 = 5)
+  g.LIDS.analyse(acc = c(), ws3 = 5,best.LIDS.metric=2)
 }
 \arguments{
   \item{acc}{
@@ -17,6 +17,9 @@
   }
   \item{ws3}{
     Duration (seconds) of the epoch one value of acc corresponds to
+  }
+  \item{best.LIDS.metric}{
+    Metric to select the best LIDS (1=correlation ,2=correlation x range)
   }
 }
 \value{
@@ -27,10 +30,10 @@
 The value \code{LIDSvars} is a dataframe and comes with the following variables:\cr
 \itemize{
 \item \code{time} time (minutes)
-\item \code{period} instantanious period of the fitted sinoid (minutes)
-\item \code{phase} instantanious phase of the fitted sinoid (radians)
+\item \code{period} instantanious period of the fitted cosine (minutes)
+\item \code{phase} instantanious phase of the fitted cosine (radians)
 \item \code{LIDSfitted} instantanious fitted LIDS (ft in Roenneberg 2015)
-\item \code{DC} instantanious direct current (offset) of the fitted sinoid)
+\item \code{DC} instantanious direct current (offset) of the fitted cosine)
 \item \code{cor} instantanious correlation coefficients between LIDSfitted and LIDSraw
 \item \code{pvalue} instantanious pvalue of the correlation between LIDSfitted and LIDSraw
 \item \code{LIDSraw} inactivity score derived from acc
@@ -40,6 +43,15 @@ The value \code{LIDSvars} is a dataframe and comes with the following variables:
 \item \code{LIDSfitted_abs_norm_interpol} interpolated and cycle normalized LIDSfitted_abs
 \item \code{LIDSfitted_norm_interpol} interpolated and cycle normalized LIDSfitted
 \item \code{LIDSperiod_interpol} interpolated period
+}
+The value \code{LIDSstationary} is a lists with the following variables:\cr
+hase=SCF$phase,period = per,amplitude = amplitude,cor = ct2$cor, pvalue = ct2$pvalue)
+\itemize{
+\item \code{period} period of the fitted cosine (minutes)
+\item \code{phase} phase of the fitted cosine (radians)
+\item \code{amplitude} amplitude of the fitted cosine
+\item \code{cor} correlation coefficient between fitted and raw
+\item \code{pvalue} pvalue of the correlation between fitted and raw
 }
 }
 \examples{

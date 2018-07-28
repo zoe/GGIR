@@ -722,7 +722,7 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                           levelsnight = LEVELS[sse][which(diur[sse] == 1)] # select acceleration from the night
                           # first distinguish wakefullness from sleep using the classifications from GGIR::g.part3:
                           WakeBinary = ifelse(test=levelsnight==0,yes = 0,no = 1) #sleep = 0, wake = 1
-                          sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.8,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
+                          sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
                           # 2. Apply LIDS analysis per bout
                           if (length(which(sleepbouts[,1] != 0)) > 0) {
                             accnight = accnight[sleepbouts[1,1]:sleepbouts[1,2]]
@@ -740,7 +740,9 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             # boutline = rep(200,diff(sleepbouts[1,])+1)
                             # lines(timelinebout,boutline,type="l",col="red")
                             # #-----------------------------------------
-                            LIDSvars = g.LIDS.analyse(acc=accnight,ws3=ws3)
+                            LIDSan = g.LIDS.analyse(acc=accnight,ws3=ws3,best.LIDS.metric=1)
+                            LIDSvars = LIDSan$LIDSvars
+                            LIDSstationary = LIDSan$LIDSstationary
                             
                             #TO DO: tidy up last simulated data appended to the end
                             fit.LIDS = lm(LIDSvars$LIDSfitted ~ LIDSvars$cycle)
@@ -749,6 +751,8 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             residuals = resid(fit.LIDS)
                             MeanAmplitude = sd(residuals)
                             
+                            
+                            # print(LIDSstationary)
                             # print(paste0("Linear slope (LIDS ~ cycle): ",coef(fit.LIDS)[1]))
                             # print(paste0("Linear slope (LIDS ~ cycle): ",coef(fit.LIDS)[2]))
                             # print(paste0("MeanAmplitude: ",MeanAmplitude))
