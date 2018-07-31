@@ -725,9 +725,18 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                           sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
                           # 2. Apply LIDS analysis per bout
                           if (length(which(sleepbouts[,1] != 0)) > 0) {
+                            sleepboutlength = sleepbouts[1,2] - sleepbouts[1,1]
+                            
+                            time_boutstart_hr = hour[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
+                            time_boutstart_min = min[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
+                            time_boutstart_sec = sec[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
+                            
+                            time_sleepboutstart_char = paste0(time_boutstart_hr,":",time_boutstart_min,":",time_boutstart_sec)
+                            if (time_boutstart_hr < 24) time_boutstart_hr + 24
+                            time_sleepboutstart_num = time_boutstart_hr + time_boutstart_min/60 + time_boutstart_sec/(3600)
+                            
                             accnight = accnight[sleepbouts[1,1]:sleepbouts[1,2]]
                             # TO DO: This currently only considers the first sleep bout, implement loop to analyse all sleep bouts?
-                            
                             # #------------------------------
                             # # TO DO: Remove next lines
                             # x11()
@@ -742,7 +751,9 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             # #-----------------------------------------
                             LIDSan = g.LIDS.analyse(acc=accnight,ws3=ws3,best.LIDS.metric=1)
                             LIDSvars = LIDSan$LIDSvars
-                            LIDSstationary = LIDSan$LIDSstationary
+                            LIDSstationary = unlist(LIDSan$LIDSstationary)
+                            
+                            
                             
                             #TO DO: tidy up last simulated data appended to the end
                             fit.LIDS = lm(LIDSvars$LIDSfitted ~ LIDSvars$cycle)
@@ -774,13 +785,18 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             # plot(LIDSvars$cycle_interpol,LIDSvars$LIDSperiod_interpol,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="cycle",bty="l")
                             # #------------------------------
                             # Add LIDS to summary
-                            dsummary[di,fi:(fi+4)] = c(coef(fit.LIDS),MeanAmplitude,maxperiod,medianperiod)
-                            
+                            dsummary[di,fi:(fi+12)] = as.vector(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
+                                                       coef(fit.LIDS), MeanAmplitude,
+                                                       maxperiod,medianperiod, LIDSstationary))
                           } else {
                             print("no sleep bouts found")
                           }
-                          ds_names[fi:(fi+4)] = c("LIDS_Intercept","LIDS_Slope", "LIDS_MeanAmplitude","LIDS_maxperiod","LIDS_medianperiod")
-                          fi = fi + 5
+                          ds_names[fi:(fi+12)] = c("LIDS_sleepboutlength","LIDS_sleepboutstart_char","LIDS_sleepboutstart_num",
+                                                  "LIDS_Intercept","LIDS_Slope", "LIDS_MeanAmplitude",
+                                                  "LIDS_maxperiod_min","LIDS_medianperiod_min",
+                                                  "LIDS_StationaryPhase","LIDS_StationaryPeriode","LIDS_StationaryAmplitude",
+                                                  "LIDS_StationaryCorr","LIDS_StationaryCorrP")
+                          fi = fi + 13
                         }
                         #===============================================
                         # NUMBER OF BOUTS
@@ -891,6 +907,7 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
         emptyrows = which(output[,1] == "" & output[,2] == "")
         if (length(emptyrows) > 0) output = output[-emptyrows,]
         lastcolumn = which(colnames(output) == "bout.metric")
+        print(colnames(output)[lastcolumn])
         if (ncol(output) > lastcolumn) {
           emptycols = which(output[1,] == "" & output[2,] == "")
           if (length(emptycols) > 0) emptycols = emptycols[which(emptycols > lastcolumn)]

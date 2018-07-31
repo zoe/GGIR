@@ -60,19 +60,31 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 1) {
     a = mean(a_t) * 2; b = mean(b_t) * 2
     # Step 6. calculate ft for each time point based on local a and b:
     ft = a * cos(norm_t) + b * sin(norm_t)
-    if (sd(ft) == 0 | sd(x) == 0) {
-      cor = 0
-      pvalue = 1
-      RI = abs(diff(range(x)))
-    } else {
-      ct = cor.test(ft,x)
-      pvalue = ct$p.value
-      cor = ct$estimate
-      RI = abs(diff(range(x)))
+    
+    
+    cor = 0
+    pvalue = 1
+    RI = abs(diff(range(x)))
+    print("------------")
+    print(length(x))
+    print(length(ft))
+    print(length(which(is.na(ft) ==TRUE)))
+    print(length(which(is.na(x) ==TRUE)))
+    print(sd(x))
+    print(sd(ft))
+    print(".")
+    if (length(ft) > 0) {
+      if (length(which(is.na(ft) == FALSE)) > 0) {
+        if (sd(ft) != 0 & sd(x) != 0) {
+          ct = cor.test(ft,x)
+          pvalue = ct$p.value
+          cor = ct$estimate
+        }
+      }
     }
     # Note: we do not multiply the correlation by the range in the data
     # because that seems to result in a very eratic score.
-    phase= atan(a/b) # should always be: -pi/2 < phase < pi/2
+    phase= atan(b/a) # should always be: -pi/2 < phase < pi/2
     LIDSfitted = ft[halfp]
     return(invisible(list(period=period,phase=phase,DC=DC,LIDSfitted=LIDSfitted,pvalue=pvalue,cor=cor,RI=RI)))
   }
@@ -82,7 +94,7 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 1) {
   for (i in 1:length(LIDSraw)) { # Step 1. loop over SPT window epoch by epoch
     periods = seq(30,180,by=5)
     periodcomp = data.frame(period=periods, phase=NA, DC=NA, LIDSfitted=NA,
-                            pvalue=NA, cor=NA)
+                            pvalue=NA, cor=NA, RI=NA)
     for (j in 1:length(periods)) { # Step 2. loop over proposed period lengths (discrete series)
       period = periods[j]
       halfp = (period)/ 2
