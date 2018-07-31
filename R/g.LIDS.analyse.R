@@ -65,14 +65,6 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 1) {
     cor = 0
     pvalue = 1
     RI = abs(diff(range(x)))
-    print("------------")
-    print(length(x))
-    print(length(ft))
-    print(length(which(is.na(ft) ==TRUE)))
-    print(length(which(is.na(x) ==TRUE)))
-    print(sd(x))
-    print(sd(ft))
-    print(".")
     if (length(ft) > 0) {
       if (length(which(is.na(ft) == FALSE)) > 0) {
         if (sd(ft) != 0 & sd(x) != 0) {

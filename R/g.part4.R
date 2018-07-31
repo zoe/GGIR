@@ -175,7 +175,7 @@ g.part4 = function(datadir=c(),metadatadir=c(),f0=f0,f1=f1,idloc=1,loglocation =
           for (h in 1:length(accid)) {
             accid[h] = as.character(unlist(strsplit(accid[h],letter[h]))[1])
           } 
-          accid = as.numeric(accid)
+          accid = suppressWarnings(as.numeric(accid))
           #catch for files with only id in filename and for whom the above attempt to extract the id failed:
           if (is.na(accid) == TRUE) accid = accid_bu
         } else { # get id from filename
@@ -242,6 +242,7 @@ g.part4 = function(datadir=c(),metadatadir=c(),f0=f0,f1=f1,idloc=1,loglocation =
             defaultSptOnset = def.noc.sleep[1] #onset
             defaultSptWake = def.noc.sleep[2] #wake
           }
+
           if (defaultSptOnset >= 24) defaultSptOnset = defaultSptOnset - 24
           if (defaultSptWake >= 24) defaultSptWake = defaultSptWake - 24
           defaultdur = defaultSptWake - defaultSptOnset #default sleep duration based on sleeplog, L5+/-6hr, or HDCZA algorithm
@@ -279,6 +280,7 @@ g.part4 = function(datadir=c(),metadatadir=c(),f0=f0,f1=f1,idloc=1,loglocation =
           # onset
           tmp1 = as.character(sleeplog.t2[,which(names(sleeplog.t2) == "sleeponset")])
           tmp2 = unlist(strsplit(tmp1,":"))
+          
           SptOnset = as.numeric(tmp2[1]) + (as.numeric(tmp2[2])/60) + (as.numeric(tmp2[3])/3600)
           # wake
           tmp4 = as.character(sleeplog.t2[,which(names(sleeplog.t2) == "sleepwake")])

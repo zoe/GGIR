@@ -149,8 +149,8 @@ expressed as hours since the previous midnight
 or specified by researcher if not sleep log is available
 \item \code{sleeplog_wake} Waking time derived from sleep log or
 specified by researcher if not sleep log is available
-\item \code{sleeplog_timeinbed} Time in bed derived from 
-sleep log or specified by researcher if not sleep log is available
+\item \code{sleeplog_SptDuration} Sleep Period Time window duration 
+sleep log or specified by researcher if no sleep log is available.
 \item \code{error_onset} Difference between sleep onset as
 estimated by accelerometer and estimated by sleeplog/defined by researcher
 \item \code{error_wake} Difference between waking time as estimated
