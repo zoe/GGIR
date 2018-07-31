@@ -186,7 +186,6 @@ g.sib.det = function(M,IMP,I,twd=c(-12,12),anglethreshold = 5,
     midnights=detemout$midnights
     midnightsi=detemout$midnightsi
     countmidn = length(midnightsi)
-    
     tib.threshold = lightson = lightsout = L5list = rep(0,countmidn)
     if (countmidn != 0) {
       if (countmidn == 1) {
@@ -215,8 +214,6 @@ g.sib.det = function(M,IMP,I,twd=c(-12,12),anglethreshold = 5,
                                               calc_lightsout=lightsout[1])
           tib.threshold[1] = inbedout$tib.threshold
         }
-        
-        
         #------------------------------------------------------------------
         # calculate L5 because this is used in case the sleep diary is not available (added 17-11-2014)
         tmpACC = ACC[qqq1:qqq2]
@@ -270,11 +267,12 @@ g.sib.det = function(M,IMP,I,twd=c(-12,12),anglethreshold = 5,
           # Estimate Sleep Period Time window, because this will be used by g.part4 if sleeplog is not available
           tmpANGLE = angle[qqq1:qqq2]
           tmpTIME = time[qqq1:qqq2]
+          hours_measurement_missing = 12 - ((midnightsi[j] - qqq1) / (3600/ws3)) # should be 0 hours for most nights
           inbedout = sptwindow_HDCZA(tmpANGLE,ws3=ws3,constrain2range=constrain2range,
                                      perc = perc, inbedthreshold = inbedthreshold, bedblocksize = bedblocksize, outofbedsize = outofbedsize)
           if (length(inbedout$lightson) != 0 & length(inbedout$lightsout) != 0) {
-            lightson[j] = (inbedout$lightson / (3600/ ws3)) + 12
-            lightsout[j] = (inbedout$lightsout / (3600/ ws3)) + 12
+            lightson[j] = (inbedout$lightson / (3600/ ws3)) +  12 + hours_measurement_missing #12 # changed because it otherwise does not work for first day
+            lightsout[j] = (inbedout$lightsout / (3600/ ws3)) + 12 + hours_measurement_missing #12 # changed because it otherwise does not work for first day
             lightson[j] = dstime_handling_check(tmpTIME=tmpTIME,inbedout=inbedout,
                                                 tz=desiredtz,calc_lightson=lightson[j],
                                                 calc_lightsout=lightsout[j])
@@ -297,6 +295,5 @@ g.sib.det = function(M,IMP,I,twd=c(-12,12),anglethreshold = 5,
     tib.threshold = c()
     detection.failed = TRUE
   }
-  
   invisible(list(output = metatmp,detection.failed=detection.failed,L5list=L5list,lightson =lightson,lightsout=lightsout,tib.threshold=tib.threshold))
 }
