@@ -739,14 +739,14 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                           sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
                           # 2. Apply LIDS analysis per bout
                           if (length(which(sleepbouts[,1] != 0)) > 0) {
-                            sleepboutlength = sleepbouts[1,2] - sleepbouts[1,1]
+                            sleepboutlength = (sleepbouts[1,2] - sleepbouts[1,1]) / (60/ws3) # in minutes
 
                             time_boutstart_hr = hour[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
                             time_boutstart_min = min[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
                             time_boutstart_sec = sec[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
 
                             time_sleepboutstart_char = paste0(time_boutstart_hr,":",time_boutstart_min,":",time_boutstart_sec)
-                            if (time_boutstart_hr < 24) time_boutstart_hr + 24
+                            if (time_boutstart_hr < 24) time_boutstart_hr = time_boutstart_hr + 24
                             time_sleepboutstart_num = time_boutstart_hr + time_boutstart_min/60 + time_boutstart_sec/(3600)
 
                             accnight = accnight[sleepbouts[1,1]:sleepbouts[1,2]]
@@ -776,14 +776,6 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             residuals = resid(fit.LIDS)
                             MeanAmplitude = sd(residuals)
 
-
-                            # print(LIDSstationary)
-                            # print(paste0("Linear slope (LIDS ~ cycle): ",coef(fit.LIDS)[1]))
-                            # print(paste0("Linear slope (LIDS ~ cycle): ",coef(fit.LIDS)[2]))
-                            # print(paste0("MeanAmplitude: ",MeanAmplitude))
-                            # print(paste0("Max Period: ",maxperiod))
-                            # print(paste0("Median Period: ",medianperiod))
-
                             # #------------------------------
                             # # TO DO: Remove next lines
                             # epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
@@ -804,14 +796,18 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                                                        maxperiod,medianperiod, LIDSstationary))
                           } else {
                             print("no sleep bouts found")
+                            dsummary[di,fi:(fi+12)] = rep("",13)
                           }
-                          ds_names[fi:(fi+12)] = c("LIDS_sleepboutlength","LIDS_sleepboutstart_char","LIDS_sleepboutstart_num",
-                                                  "LIDS_Intercept","LIDS_Slope", "LIDS_MeanAmplitude",
-                                                  "LIDS_maxperiod_min","LIDS_medianperiod_min",
-                                                  "LIDS_StationaryPhase","LIDS_StationaryPeriode","LIDS_StationaryAmplitude",
-                                                  "LIDS_StationaryCorr","LIDS_StationaryCorrP")
-                          fi = fi + 13
+                        } else {
+                          dsummary[di,fi:(fi+12)] = rep("",13)
                         }
+                        ds_names[fi:(fi+12)] = c("LIDS_sleepboutlength_min","LIDS_sleepboutstart_char","LIDS_sleepboutstart_num",
+                                                 "LIDS_Intercept","LIDS_Slope", "LIDS_MeanAmplitude",
+                                                 "LIDS_maxperiod_min","LIDS_medianperiod_min",
+                                                 "LIDS_StationaryPhase","LIDS_StationaryPeriode","LIDS_StationaryAmplitude",
+                                                 "LIDS_StationaryCorr","LIDS_StationaryCorrP")
+                        fi = fi + 13
+                        
                         #===============================================
                         # NUMBER OF BOUTS
                         checkshape = function(boutcount) {
@@ -921,9 +917,17 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
         emptyrows = which(output[,1] == "" & output[,2] == "")
         if (length(emptyrows) > 0) output = output[-emptyrows,]
         lastcolumn = which(colnames(output) == "bout.metric")
-        print(colnames(output)[lastcolumn])
         if (ncol(output) > lastcolumn) {
-          emptycols = which(output[1,] == "" & output[2,] == "")
+          emptycols = which(output[1,] == "" & output[2,] == "") # check which first two rows are empty
+          if (length(emptycols) > 0) {
+            emptycols2 = emptycols
+            for (empi in 1:length(emptycols)) { # now check more thorough whether the entire column is emty
+              if (length(which(output[,emptycols[empi]] == "")) != nrow(output)) { #check if entire column is empty
+                emptycols2 = emptycols2[-c(which(emptycols2 == emptycols[empi]))]
+              }
+            }
+          }
+          emptycols = emptycols2
           if (length(emptycols) > 0) emptycols = emptycols[which(emptycols > lastcolumn)]
           if (length(emptycols) > 0) output = output[-emptycols]
         }
