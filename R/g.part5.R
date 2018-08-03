@@ -763,51 +763,52 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             # boutline = rep(200,diff(sleepbouts[1,])+1)
                             # lines(timelinebout,boutline,type="l",col="red")
                             # #-----------------------------------------
-                            LIDSan = g.LIDS.analyse(acc=accnight,ws3=ws3,best.LIDS.metric=1)
-                            LIDSvars = LIDSan$LIDSvars
-                            LIDSstationary = unlist(LIDSan$LIDSstationary)
-
-
+                            LIDSan = g.LIDS.analyse(acc=accnight,ws3=ws3,best.LIDS.metric=1, min_period = 30,
+                                                    max_period = 180, step = 5)
+                            LIDS_NS = LIDSan$LIDS_NS
+                            LIDS_S = unlist(LIDSan$LIDS_S)
 
                             #TO DO: tidy up last simulated data appended to the end
-                            fit.LIDS = lm(LIDSvars$LIDSfitted ~ LIDSvars$cycle)
-                            maxperiod = max(LIDSvars$period,na.rm = TRUE)
-                            medianperiod = median(LIDSvars$period,na.rm = TRUE)
+                            fit.LIDS = lm(LIDS_NS$LIDSfitted ~ LIDS_NS$cycle)
+                            maxperiod = max(LIDS_NS$period,na.rm = TRUE)
+                            medianperiod = median(LIDS_NS$period,na.rm = TRUE)
                             residuals = resid(fit.LIDS)
                             MeanAmplitude = sd(residuals)
 
                             # #------------------------------
                             # # TO DO: Remove next lines
                             # epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
-                            # time_LIDS = LIDSvars$time
+                            # time_LIDS = LIDS_NS$time
                             # x11()
                             # par(mfrow=c(2,2),mar=c(4,4,4,1))
-                            # plot(time_LIDS, LIDSvars$LIDSraw, type="l",main="LIDS",col="black",ylab="LIDS score",xlab="time (minutes)",bty="l")
-                            # lines(time_LIDS, LIDSvars$LIDSfitted + LIDSvars$DC,type="l",col="blue",ylab="LIDS raw")
+                            # plot(time_LIDS, LIDS_NS$LIDSraw, type="l",main="LIDS",col="black",ylab="LIDS score",xlab="time (minutes)",bty="l")
+                            # lines(time_LIDS, LIDS_NS$LIDSfitted + LIDS_NS$DC,type="l",col="blue",ylab="LIDS raw")
                             # legend("bottomright",legend = c("LIDS raw","LIDS fitted"),col=c("black","blue"),lty = c(1,1),cex=0.8)
-                            # plot(LIDSvars$cycle_interpol, LIDSvars$LIDSfitted_abs_norm_interpol,type="l",main="LIDS",ylab="LIDS score",xlab="cycle",bty="l",col="blue")
+                            # plot(LIDS_NS$cycle_interpol, LIDS_NS$LIDSfitted_abs_norm_interpol,type="l",main="LIDS",ylab="LIDS score",xlab="cycle",bty="l",col="blue")
                             # legend("bottomright",legend = c("LIDS raw"),col=c("blue"),lty = c(1,1),cex=0.8)
-                            # plot(time_LIDS,LIDSvars$period,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="time (minutes)",bty="l")
-                            # plot(LIDSvars$cycle_interpol,LIDSvars$LIDSperiod_interpol,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="cycle",bty="l")
+                            # plot(time_LIDS,LIDS_NS$period,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="time (minutes)",bty="l")
+                            # plot(LIDS_NS$cycle_interpol,LIDS_NS$LIDSperiod_interpol,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="cycle",bty="l")
                             # #------------------------------
                             # Add LIDS to summary
-                            dsummary[di,fi:(fi+12)] = as.vector(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
+                            print(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
+                                    coef(fit.LIDS), MeanAmplitude,
+                                    maxperiod,medianperiod))
+                            dsummary[di,fi:(fi+13)] = as.vector(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
                                                        coef(fit.LIDS), MeanAmplitude,
-                                                       maxperiod,medianperiod, LIDSstationary))
+                                                       maxperiod,medianperiod, LIDS_S))
                           } else {
-                            print("no sleep bouts found")
-                            dsummary[di,fi:(fi+12)] = rep("",13)
+                            # no sleep bouts found
+                            dsummary[di,fi:(fi+13)] = rep("",14)
                           }
                         } else {
-                          dsummary[di,fi:(fi+12)] = rep("",13)
+                          dsummary[di,fi:(fi+13)] = rep("",14)
                         }
-                        ds_names[fi:(fi+12)] = c("LIDS_sleepboutlength_min","LIDS_sleepboutstart_char","LIDS_sleepboutstart_num",
+                        ds_names[fi:(fi+13)] = c("LIDS_sleepboutlength_min","LIDS_sleepboutstart_char","LIDS_sleepboutstart_num",
                                                  "LIDS_Intercept","LIDS_Slope", "LIDS_MeanAmplitude",
                                                  "LIDS_maxperiod_min","LIDS_medianperiod_min",
                                                  "LIDS_StationaryPhase","LIDS_StationaryPeriode","LIDS_StationaryAmplitude",
-                                                 "LIDS_StationaryCorr","LIDS_StationaryCorrP")
-                        fi = fi + 13
-                        
+                                                 "LIDS_StationaryCorr","LIDS_StationaryCorrP","LIDS_StationaryMRI")
+                        fi = fi + 14
                         #===============================================
                         # NUMBER OF BOUTS
                         checkshape = function(boutcount) {

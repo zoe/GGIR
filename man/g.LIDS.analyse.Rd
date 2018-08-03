@@ -21,6 +21,15 @@
   \item{best.LIDS.metric}{
     Metric to select the best LIDS (1=correlation ,2=correlation x range)
   }
+  \item{min_period}{
+    Minimum period length to consider (minutes)
+  }
+  \item{max_period}{
+    Maximum period length to consider (minutes)
+  }
+  \item{step_period}{
+    Stepsize with which to interpolate min and max.
+  }
 }
 \value{
 \item{\code{LIDSvars}}{A data.frame with the LIDS variabls, see details}
