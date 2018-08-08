@@ -99,7 +99,7 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period =
   }
   periods = seq(min_period,max_period,by=step_period)
   LIDS_S = LIDS_NS = data.frame(time=1:length(LIDSraw), period=NA, phase=NA, 
-                                    LIDSfitted=NA, DC=NA, pvalue=NA, cor=NA, MRI=NA)
+                                LIDSfitted=NA, DC=NA, pvalue=NA, cor=NA, MRI=NA)
   #==========================================
   # Non stationary
   cntt = 1
@@ -148,32 +148,50 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period =
   LIDS_S = LIDS_S[,-c(which(colnames(LIDS_S) == "LIDSfitted"))]
   #------------------------------------------------------------
   # remove Plateau at the end
-  lastvalue = LIDS_NS$LIDSraw[length(LIDS_NS$LIDSraw)]
-  startPlateau = length(LIDS_NS$LIDSraw) - which((rev(LIDS_NS$LIDSraw)==lastvalue) == FALSE)[1]
-  if (startPlateau < length(LIDS_NS$LIDSraw)) {
-    LIDS_NS = LIDS_NS[1:startPlateau,] 
+  print("find plateau")
+  indexLastValue = max(which(is.na(LIDS_NS$LIDSraw) == FALSE)) # find the last value that is not a NA 
+  lastvalue = LIDS_NS$LIDSraw[indexLastValue] #[length(LIDS_NS$LIDSraw)]
+  revLIDSraw = rev(LIDS_NS$LIDSraw)
+  ReverseIndexFirstValuePlateau = which(revLIDSraw != lastvalue & is.na(revLIDSraw) == FALSE)[1]
+  print(ReverseIndexFirstValuePlateau)
+  print(indexLastValue)
+  if (length(ReverseIndexFirstValuePlateau) > 0) {
+    if (is.na(ReverseIndexFirstValuePlateau) == FALSE) {
+      startPlateau = indexLastValue - ReverseIndexFirstValuePlateau
+      if (length(startPlateau) > 0 & nrow(LIDS_NS) > 10) {
+        if (startPlateau < length(LIDS_NS$LIDSraw)) {
+          print("shorten")
+          LIDS_NS = LIDS_NS[1:startPlateau,] 
+        }
+      }
+    }
   }
-  LIDS_NS = LIDS_NS[which(LIDS_NS$cor > 0.8)[1]:nrow(LIDS_NS),]
-  LIDS_NS$cycle = c()
-  LIDS_NS$cycle = LIDS_NS$phase + abs(min(LIDS_NS$phase,na.rm = TRUE))
-  LIDS_NS$cycle[which(is.na(LIDS_NS$cycle) == TRUE)] = 0
-  dcycle = abs(diff(LIDS_NS$cycle))
-  dcycle[which(dcycle > 1)] = 0
-  LIDS_NS$cycle[1:(nrow(LIDS_NS)-1)] = cumsum(dcycle) / (2*pi)
-  # absolute fitted LIDS line, meaning: including the original offset (=DC component)
-  LIDS_NS$LIDSfitted_abs = LIDS_NS$LIDSfitted+ LIDS_NS$DC
-  # create regularly spaced cycle points for which we want to interpolate the above variables"
-  minc = min(LIDS_NS$cycle)
-  maxc = max(LIDS_NS$cycle)
-  LIDS_NS$cycle_interpol = ((((1:nrow(LIDS_NS))-1 ) / nrow(LIDS_NS))* (maxc-minc)) + minc
-  # interpolate LIDSfitted_abs
-  A = approx(LIDS_NS$cycle,LIDS_NS$LIDSfitted_abs, xout = LIDS_NS$cycle_interpol, rule = 2, method = "linear", ties = mean)
-  LIDS_NS$LIDSfitted_abs_norm_interpol = A$y
-  # interpolate LIDSfitted
-  A = approx(LIDS_NS$cycle,LIDS_NS$LIDSfitted, xout = LIDS_NS$cycle_interpol, rule = 2, method = "linear", ties = mean)
-  LIDS_NS$LIDSfitted_norm_interpol = A$y
-  # interpolate period
-  A = approx(LIDS_NS$cycle,LIDS_NS$period, xout = LIDS_NS$cycle_interpol, rule = 2, method = "linear", ties = mean)
-  LIDS_NS$LIDSperiod_interpol = A$y
-  return(invisible(list(LIDS_NS=LIDS_NS,LIDS_S=LIDS_S)))
+  # LIDS_NS = LIDS_NS[which(LIDS_NS$cor > 0.8)[1]:nrow(LIDS_NS),]
+  print(dim(LIDS_NS))
+  if (nrow(LIDS_NS) >= 10 & length(which(is.na(LIDS_NS$LIDSfitted) == FALSE)) > 10) {
+    LIDS_NS$cycle = c()
+    LIDS_NS$cycle = LIDS_NS$phase + abs(min(LIDS_NS$phase,na.rm = TRUE))
+    LIDS_NS$cycle[which(is.na(LIDS_NS$cycle) == TRUE)] = 0
+    dcycle = abs(diff(LIDS_NS$cycle))
+    dcycle[which(dcycle > 1)] = 0
+    LIDS_NS$cycle[1:(nrow(LIDS_NS)-1)] = cumsum(dcycle) / (2*pi)
+    # absolute fitted LIDS line, meaning: including the original offset (=DC component)
+    LIDS_NS$LIDSfitted_abs = LIDS_NS$LIDSfitted+ LIDS_NS$DC
+    # create regularly spaced cycle points for which we want to interpolate the above variables"
+    minc = min(LIDS_NS$cycle)
+    maxc = max(LIDS_NS$cycle)
+    LIDS_NS$cycle_interpol = ((((1:nrow(LIDS_NS))-1 ) / nrow(LIDS_NS))* (maxc-minc)) + minc
+    # interpolate LIDSfitted_abs
+    A = approx(LIDS_NS$cycle,LIDS_NS$LIDSfitted_abs, xout = LIDS_NS$cycle_interpol, rule = 2, method = "linear", ties = mean)
+    LIDS_NS$LIDSfitted_abs_norm_interpol = A$y
+    # interpolate LIDSfitted
+    A = approx(LIDS_NS$cycle,LIDS_NS$LIDSfitted, xout = LIDS_NS$cycle_interpol, rule = 2, method = "linear", ties = mean)
+    LIDS_NS$LIDSfitted_norm_interpol = A$y
+    # interpolate period
+    A = approx(LIDS_NS$cycle,LIDS_NS$period, xout = LIDS_NS$cycle_interpol, rule = 2, method = "linear", ties = mean)
+    LIDS_NS$LIDSperiod_interpol = A$y
+    return(invisible(list(LIDS_NS=LIDS_NS,LIDS_S=LIDS_S)))
+  } else {
+    return()
+  }
 }

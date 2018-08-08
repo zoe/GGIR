@@ -29,19 +29,23 @@ g.report.part5 = function(metadatadir=c(),f0=c(),f1=c(),loglocation=c(),
       out = as.matrix(output)
     }
     outputfinal = as.data.frame(do.call(rbind,lapply(fnames.ms5[f0:f1],myfun)),stringsAsFactors=FALSE)
+    
+    # empty columns
     cut = which(outputfinal[1,] == "")
     if (length(cut) > 0) {
       cut2 = cut
+      print("a")
       for (empi in 1:length(cut)) { # now check more thorough whether the entire column is emty
-        if (length(which(outputfinal[,cut[empi]] == "")) != nrow(outputfinal)) { #check if entire column is empty
+        if (length(cut2) > 0 & length(which(outputfinal[,cut[empi]] == "")) != nrow(outputfinal)) { #check if entire column is empty
           cut2 = cut2[-c(which(cut2 == cut[empi]))]
         }
       }
+      cut = cut2
+      if (length(cut) > 0) {
+        outputfinal = outputfinal[,-cut]
+      }
     }
-    cut = cut2
-    if (length(cut) > 0) {
-      outputfinal = outputfinal[,-cut]
-    }
+    # empty rows
     cut2 = which(outputfinal[,1] == "" & outputfinal[,2] == "")
     if (length(cut2) > 0) {
       outputfinal = outputfinal[-cut2,]
