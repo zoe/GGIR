@@ -144,30 +144,24 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period =
       LIDS_S = PCS[which.max(PCS$MRI)[1],]
     }
   }
-  
   LIDS_S = LIDS_S[,-c(which(colnames(LIDS_S) == "LIDSfitted"))]
   #------------------------------------------------------------
-  # remove Plateau at the end
-  print("find plateau")
+  # remove Plateau at the end if there is one
   indexLastValue = max(which(is.na(LIDS_NS$LIDSraw) == FALSE)) # find the last value that is not a NA 
   lastvalue = LIDS_NS$LIDSraw[indexLastValue] #[length(LIDS_NS$LIDSraw)]
   revLIDSraw = rev(LIDS_NS$LIDSraw)
   ReverseIndexFirstValuePlateau = which(revLIDSraw != lastvalue & is.na(revLIDSraw) == FALSE)[1]
-  print(ReverseIndexFirstValuePlateau)
-  print(indexLastValue)
   if (length(ReverseIndexFirstValuePlateau) > 0) {
     if (is.na(ReverseIndexFirstValuePlateau) == FALSE) {
       startPlateau = indexLastValue - ReverseIndexFirstValuePlateau
       if (length(startPlateau) > 0 & nrow(LIDS_NS) > 10) {
-        if (startPlateau < length(LIDS_NS$LIDSraw)) {
-          print("shorten")
+        if (startPlateau < length(LIDS_NS$LIDSraw)) { # kind of obvious, can be removed?
           LIDS_NS = LIDS_NS[1:startPlateau,] 
         }
       }
     }
   }
   # LIDS_NS = LIDS_NS[which(LIDS_NS$cor > 0.8)[1]:nrow(LIDS_NS),]
-  print(dim(LIDS_NS))
   if (nrow(LIDS_NS) >= 10 & length(which(is.na(LIDS_NS$LIDSfitted) == FALSE)) > 10) {
     LIDS_NS$cycle = c()
     LIDS_NS$cycle = LIDS_NS$phase + abs(min(LIDS_NS$phase,na.rm = TRUE))
@@ -191,6 +185,7 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period =
     A = approx(LIDS_NS$cycle,LIDS_NS$period, xout = LIDS_NS$cycle_interpol, rule = 2, method = "linear", ties = mean)
     LIDS_NS$LIDSperiod_interpol = A$y
     return(invisible(list(LIDS_NS=LIDS_NS,LIDS_S=LIDS_S)))
+
   } else {
     return()
   }

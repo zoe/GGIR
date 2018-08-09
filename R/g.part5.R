@@ -736,11 +736,13 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                           levelsnight = LEVELS[sse][which(diur[sse] == 1)] # select acceleration from the night
                           # first distinguish wakefullness from sleep using the classifications from GGIR::g.part3:
                           WakeBinary = ifelse(test=levelsnight==0,yes = 0,no = 1) #sleep = 0, wake = 1
-                          sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
+                          sleepbouts = matrix(0,2,2)
+                          if (length(WakeBinary) > 0) {
+                            sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
+                          }
                           # 2. Apply LIDS analysis per bout
                           if (length(which(sleepbouts[,1] != 0)) > 0) {
                             sleepboutlength = (sleepbouts[1,2] - sleepbouts[1,1]) / (60/ws3) # in minutes
-
                             time_boutstart_hr = hour[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
                             time_boutstart_min = min[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
                             time_boutstart_sec = sec[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
@@ -768,14 +770,12 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             if (length(LIDSan) > 0) { # only report LIDS if LIDS analyses were succesful
                               LIDS_NS = LIDSan$LIDS_NS
                               LIDS_S = unlist(LIDSan$LIDS_S)
-                              
                               #TO DO: tidy up last simulated data appended to the end
                               fit.LIDS = lm(LIDS_NS$LIDSfitted ~ LIDS_NS$cycle)
                               maxperiod = max(LIDS_NS$period,na.rm = TRUE)
                               medianperiod = median(LIDS_NS$period,na.rm = TRUE)
                               residuals = resid(fit.LIDS)
                               MeanAmplitude = sd(residuals)
-                              
                               # #------------------------------
                               # # TO DO: Remove next lines
                               # epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
