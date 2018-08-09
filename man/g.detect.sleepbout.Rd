@@ -7,7 +7,8 @@
   Detect sleep bouts from binary wake/sleep input to facilitate LIDS analyses.
 }
 \usage{
-  g.detect.sleepbout(WakeBinary=c(),WakeBout.threshold=0.7,WakeBoutMin=30,SleepBoutMin=180,ws3=5)
+  g.detect.sleepbout(WakeBinary=c(), WakeBout.threshold=0.5,
+            WakeBoutMin=30, SleepBoutMin=180, ws3=5)
 }
 \arguments{
   \item{WakeBinary}{
@@ -19,7 +20,7 @@
     \item{ WakeBoutMin}{
     Minimum duration of the Wakefullness Bout (minutes)
   }
-    \item{SleepBoutMind}{
+    \item{SleepBoutMin}{
     Minimum duration of the Sleep Bout (minutes)
   }
     \item{ws3}{
@@ -33,7 +34,8 @@
 
 \examples{
   WakeBinary = c(rep(0,12*60*4),rep(1,12*40),rep(0,12*60,2)) # dummy input
-  sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=5)
+  sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary, 
+                WakeBout.threshold=0.5, WakeBoutMin=30, SleepBoutMin=180,ws3=5)
   print(sleepbouts)
 }
 \author{

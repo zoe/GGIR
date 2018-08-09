@@ -1,9 +1,10 @@
 # By: Vincent van Hees, July 2018
-g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period = 30, max_period = 180, step_period = 5) {
+g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2, 
+                          min_period = 30, max_period = 180, step_period = 5) {
   # Input:
   # - acc: vector of acceleration time series
   # - ws3: epoch length of acc (seconds)
-  # - best.LIDS.metric: metric to select the best LIDS (1=cor,2=cor*range)
+  # - best.fit.criterion.cosine: metric to select the best LIDS (1=cor,2=cor*range)
   # - min_period: minimum period length to consider (minutes)
   # - max_period: maximum period length to consider (minutes)
   # - step_period: stepsize with which to interpolate min and max.
@@ -35,10 +36,10 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period =
   if (length(anyNA) > 0) binaryclassification[anyNA] = 0
   binaryclassification_smooth = zoo::rollsum(x=binaryclassification,k=(60*rollsumwindow)/ws3) # 10 minute rolling sum
   # not using align = "center" in the previous step makes that we loose 5 minutes on each end of the time series
-  # Nexpandmin = Nexpandmin - (rollsumwindow/2)
-  inactivity = (10*(60/ws3)) / (binaryclassification_smooth + 1) #max value devided by (score + 1)
-  #rescale to 0-100
-  inactivity = inactivity / (0.6*rollsumwindow/ws3)
+  # rescale to 0-100
+  binaryclassification_smooth = binaryclassification_smooth / ((rollsumwindow*(60/ws3)) / 100)
+  inactivity = 100 / (binaryclassification_smooth + 1) #max value devided by (score + 1)
+  
   LIDSraw = zoo::rollmean(x=inactivity,k=(60*30)/ws3,fill = "extend") # 30 minute rolling average
   # Downsample to 1 minute resolution to speed up code  
   LIDSraw = LIDSraw[seq(1,length(LIDSraw),by=60/ws3)]
@@ -76,11 +77,12 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period =
     ft = a * cos(norm_t) + b * sin(norm_t)
     cor = 0
     pvalue = 1
-    RoO = abs(diff(range(LIDS,na.rm = TRUE))) # I used to have x
+    # RoO = abs(diff(range(LIDS,na.rm = TRUE))) # I used to have x
+    RoO = abs(diff(range(ft,na.rm = TRUE))) # I used to have x
     if (length(ft) > 0) {
       if (length(which(is.na(ft) == FALSE)) > 0) {
         if (sd(ft) != 0 & sd(LIDS) != 0) {
-          ct = cor.test(ft,LIDS)
+          ct = stats::cor.test(ft,LIDS)
           pvalue = ct$p.value
           cor = ct$estimate
         }
@@ -95,17 +97,17 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period =
     } else {
       LIDSfitted = NA # not applicable
     }
-    return(invisible(list(period=period,phase=phase,DC=DC,LIDSfitted=LIDSfitted,pvalue=pvalue,cor=cor,MRI=MRI)))
+    return(invisible(list(period=period,phase=phase,DC=DC,LIDSfitted=LIDSfitted,pvalue=pvalue,cor=cor,MRI=MRI,RoO=RoO)))
   }
   periods = seq(min_period,max_period,by=step_period)
   LIDS_S = LIDS_NS = data.frame(time=1:length(LIDSraw), period=NA, phase=NA, 
-                                LIDSfitted=NA, DC=NA, pvalue=NA, cor=NA, MRI=NA)
+                                LIDSfitted=NA, DC=NA, pvalue=NA, cor=NA, MRI=NA, RoO=NA)
   #==========================================
   # Non stationary
   cntt = 1
   for (i in 1:length(LIDSraw)) { # Step 1. loop over SPT window epoch by epoch
     #PCNS: Period comparison non stationary
-    PCNS = data.frame(period=periods, phase=NA, DC=NA, LIDSfitted=NA, pvalue=NA, cor=NA, MRI=NA)
+    PCNS = data.frame(period=periods, phase=NA, DC=NA, LIDSfitted=NA, pvalue=NA, cor=NA, MRI=NA,RoO=NA)
     for (j in 1:length(periods)) { # Step 2. loop over proposed period lengths (discrete series)
       period = periods[j]
       halfp = (period)/ 2
@@ -118,29 +120,29 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period =
     }
     if (length(which(is.na(PCNS$cor) == FALSE)) > 2) {
       # Step 7. select best period and from that you know instantanious phase
-      if (best.LIDS.metric == 1) {
+      if (best.fit.criterion.cosine == 1) {
         bestperiod = PCNS[which.max(PCNS$cor)[1],]
-      } else if (best.LIDS.metric == 2) {
+      } else if (best.fit.criterion.cosine == 2) {
         bestperiod = PCNS[which.max(PCNS$MRI)[1],]
       }
-      LIDS_NS[i,] = bestperiod
+      LIDS_NS[i,2:ncol(LIDS_NS)] = bestperiod
     }
   }
   LIDS_NS$LIDSraw = LIDSraw
   #==========================================
   # Stationary
   # PCS: Period comparison stationary
-  PCS = data.frame(period=periods, phase=NA, DC=NA, LIDSfitted=NA, pvalue=NA, cor=NA, MRI=NA)
+  PCS = data.frame(period=periods, phase=NA, DC=NA, LIDSfitted=NA, pvalue=NA, cor=NA, MRI=NA, RoO=NA)
   for (j in 1:length(periods)) { # Step 2. loop over proposed period lengths (discrete series)
     period = periods[j]
     PCS[j,] = cosfit(time_min,LIDS = LIDSraw,period, stationary = TRUE) # Step 3-6: Apply cosine fit
   }
   if (length(which(is.na(PCS$cor) == FALSE)) > 2) {
     # Step 7. select best period and from that you know instantanious phase
-    if (best.LIDS.metric == 1) {
+    if (best.fit.criterion.cosine == 1) {
       besti = which.max(PCS$cor)[1]
       LIDS_S = PCS[besti,]
-    } else if (best.LIDS.metric == 2) {
+    } else if (best.fit.criterion.cosine == 2) {
       LIDS_S = PCS[which.max(PCS$MRI)[1],]
     }
   }
@@ -169,6 +171,8 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.LIDS.metric = 2, min_period =
     dcycle = abs(diff(LIDS_NS$cycle))
     dcycle[which(dcycle > 1)] = 0
     LIDS_NS$cycle[1:(nrow(LIDS_NS)-1)] = cumsum(dcycle) / (2*pi)
+    LIDS_NS$cycle_full = trunc(LIDS_NS$cycle)+1
+    
     # absolute fitted LIDS line, meaning: including the original offset (=DC component)
     LIDS_NS$LIDSfitted_abs = LIDS_NS$LIDSfitted+ LIDS_NS$DC
     # create regularly spaced cycle points for which we want to interpolate the above variables"

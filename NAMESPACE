@@ -11,7 +11,8 @@ export(g.analyse,g.calibrate,g.getmeta
         g.readaccfile,g.report.part2,g.report.part4,
        g.report.part5,g.sib.det,g.sib.plot,g.wavread,
        g.weardec,isfilelist,iso8601chartime2POSIX,is_this_a_dst_night,
-        numUnpack,POSIXtime2iso8601,resample)
+        numUnpack,POSIXtime2iso8601,resample, g.LIDS.analyse,
+       g.detect.sleepbout)
 importFrom("grDevices", "colors", "dev.off", "pdf","rainbow")
 importFrom("graphics", "abline", "axis", "par", "plot", "plot.new",
       "rect","axis.POSIXct", "barplot", "box", "legend",
@@ -20,7 +21,7 @@ importFrom("utils", "read.csv", "sessionInfo", "write.csv")
 importFrom("utils", "setTxtProgressBar", "txtProgressBar","write.table")
 importFrom("stats", "aggregate.data.frame", "weighted.mean",
            "rnorm","median","aggregate","C", "lm.wfit",
-           "quantile", "sd")
+           "quantile", "sd", "approx", "coef", "cor.test", "lm", "resid")
 import(data.table)
 useDynLib(GGIR, .registration=TRUE)
 importFrom(Rcpp, sourceCpp)

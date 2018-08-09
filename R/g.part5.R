@@ -9,7 +9,8 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                    boutdur.lig = c(1,5,10),
                    winhr = 5,
                    M5L5res = 10,
-                   overwrite=FALSE,desiredtz="Europe/London",bout.metric=4, dayborder = 0, save_ms5rawlevels = FALSE) {
+                   overwrite=FALSE,desiredtz="Europe/London",bout.metric=4, dayborder = 0, save_ms5rawlevels = FALSE,
+                   do.LIDS = FALSE) {
   options(encoding = "UTF-8")
   # description: function called by g.shell.GGIR
   # aimed to merge the milestone output from g.part2, g.part3, and g.part4
@@ -730,89 +731,99 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                         #===============================================
                         # LIDS analysis
                         #=======================================================
-                        if (timewindowi == "WW") { # only do these analyses when timewindow is defined as WW
-                          # Extract level and acc for the night
-                          accnight = ACC[sse][which(diur[sse] == 1)] # select acceleration from the night
-                          levelsnight = LEVELS[sse][which(diur[sse] == 1)] # select acceleration from the night
-                          # first distinguish wakefullness from sleep using the classifications from GGIR::g.part3:
-                          WakeBinary = ifelse(test=levelsnight==0,yes = 0,no = 1) #sleep = 0, wake = 1
-                          sleepbouts = matrix(0,2,2)
-                          if (length(WakeBinary) > 0) {
-                            sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
-                          }
-                          # 2. Apply LIDS analysis per bout
-                          if (length(which(sleepbouts[,1] != 0)) > 0) {
-                            sleepboutlength = (sleepbouts[1,2] - sleepbouts[1,1]) / (60/ws3) # in minutes
-                            time_boutstart_hr = hour[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
-                            time_boutstart_min = min[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
-                            time_boutstart_sec = sec[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
-
-                            time_sleepboutstart_char = paste0(time_boutstart_hr,":",time_boutstart_min,":",time_boutstart_sec)
-                            if (time_boutstart_hr < 24) time_boutstart_hr = time_boutstart_hr + 24
-                            time_sleepboutstart_num = time_boutstart_hr + time_boutstart_min/60 + time_boutstart_sec/(3600)
-
-                            accnight = accnight[sleepbouts[1,1]:sleepbouts[1,2]]
-                            # TO DO: This currently only considers the first sleep bout, implement loop to analyse all sleep bouts?
-                            # #------------------------------
-                            # # TO DO: Remove next lines
-                            # x11()
-                            # par(mfrow=c(2,2),pch=20)
-                            # plot(LEVELS[sse][which(diur[sse] == 1)],main="LEVELS")
-                            # plot(diur[sse][which(diur[sse] == 1)],main="diur")
-                            # plot(WakeBinary,main="bin")
-                            # plot(ACC[sse][which(diur[sse] == 1)],main="ACC",type="l")
-                            # timelinebout = sleepbouts[1,1]:sleepbouts[1,2]
-                            # boutline = rep(200,diff(sleepbouts[1,])+1)
-                            # lines(timelinebout,boutline,type="l",col="red")
-                            # #-----------------------------------------
-                            LIDSan = g.LIDS.analyse(acc=accnight,ws3=ws3,best.LIDS.metric=1, min_period = 30,
-                                                    max_period = 180, step = 5)
-                            if (length(LIDSan) > 0) { # only report LIDS if LIDS analyses were succesful
-                              LIDS_NS = LIDSan$LIDS_NS
-                              LIDS_S = unlist(LIDSan$LIDS_S)
-                              #TO DO: tidy up last simulated data appended to the end
-                              fit.LIDS = lm(LIDS_NS$LIDSfitted ~ LIDS_NS$cycle)
-                              maxperiod = max(LIDS_NS$period,na.rm = TRUE)
-                              medianperiod = median(LIDS_NS$period,na.rm = TRUE)
-                              residuals = resid(fit.LIDS)
-                              MeanAmplitude = sd(residuals)
+                        if (do.LIDS == TRUE) {
+                          if (timewindowi == "WW") { # only do these analyses when timewindow is defined as WW
+                            # Extract level and acc for the night
+                            accnight = ACC[sse][which(diur[sse] == 1)] # select acceleration from the night
+                            levelsnight = LEVELS[sse][which(diur[sse] == 1)] # select acceleration from the night
+                            # first distinguish wakefullness from sleep using the classifications from GGIR::g.part3:
+                            WakeBinary = ifelse(test=levelsnight==0,yes = 0,no = 1) #sleep = 0, wake = 1
+                            sleepbouts = matrix(0,2,2)
+                            if (length(WakeBinary) > 0) {
+                              sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
+                            }
+                            # 2. Apply LIDS analysis per bout
+                            if (length(which(sleepbouts[,1] != 0)) > 0) {
+                              sleepboutlength = (sleepbouts[1,2] - sleepbouts[1,1]) / (60/ws3) # in minutes
+                              time_boutstart_hr = hour[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
+                              time_boutstart_min = min[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
+                              time_boutstart_sec = sec[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
+                              
+                              time_sleepboutstart_char = paste0(time_boutstart_hr,":",time_boutstart_min,":",time_boutstart_sec)
+                              if (time_boutstart_hr < 24) time_boutstart_hr = time_boutstart_hr + 24
+                              time_sleepboutstart_num = time_boutstart_hr + time_boutstart_min/60 + time_boutstart_sec/(3600)
+                              
+                              accnight = accnight[sleepbouts[1,1]:sleepbouts[1,2]]
+                              # TO DO: This currently only considers the first sleep bout, implement loop to analyse all sleep bouts?
                               # #------------------------------
                               # # TO DO: Remove next lines
-                              # epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
-                              # time_LIDS = LIDS_NS$time
                               # x11()
-                              # par(mfrow=c(2,2),mar=c(4,4,4,1))
-                              # plot(time_LIDS, LIDS_NS$LIDSraw, type="l",main="LIDS",col="black",ylab="LIDS score",xlab="time (minutes)",bty="l")
-                              # lines(time_LIDS, LIDS_NS$LIDSfitted + LIDS_NS$DC,type="l",col="blue",ylab="LIDS raw")
-                              # legend("bottomright",legend = c("LIDS raw","LIDS fitted"),col=c("black","blue"),lty = c(1,1),cex=0.8)
-                              # plot(LIDS_NS$cycle_interpol, LIDS_NS$LIDSfitted_abs_norm_interpol,type="l",main="LIDS",ylab="LIDS score",xlab="cycle",bty="l",col="blue")
-                              # legend("bottomright",legend = c("LIDS raw"),col=c("blue"),lty = c(1,1),cex=0.8)
-                              # plot(time_LIDS,LIDS_NS$period,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="time (minutes)",bty="l")
-                              # plot(LIDS_NS$cycle_interpol,LIDS_NS$LIDSperiod_interpol,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="cycle",bty="l")
-                              # #------------------------------
-                              # Add LIDS to summary
-                              # print(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
-                              #         coef(fit.LIDS), MeanAmplitude,
-                              #         maxperiod,medianperiod))
-                              dsummary[di,fi:(fi+13)] = as.vector(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
-                                                                    coef(fit.LIDS), MeanAmplitude,
-                                                                    maxperiod,medianperiod, LIDS_S))
+                              # par(mfrow=c(2,2),pch=20)
+                              # plot(LEVELS[sse][which(diur[sse] == 1)],main="LEVELS")
+                              # plot(diur[sse][which(diur[sse] == 1)],main="diur")
+                              # plot(WakeBinary,main="bin")
+                              # plot(ACC[sse][which(diur[sse] == 1)],main="ACC",type="l")
+                              # timelinebout = sleepbouts[1,1]:sleepbouts[1,2]
+                              # boutline = rep(200,diff(sleepbouts[1,])+1)
+                              # lines(timelinebout,boutline,type="l",col="red")
+                              # #-----------------------------------------
+                              
+                              # TO DO: Make sure the arguments to this function are not hardcoded, but modifiable
+                              LIDSan = g.LIDS.analyse(acc=accnight,ws3=ws3,best.fit.criterion.cosine=2, min_period = 30,
+                                                      max_period = 180, step_period = 5)
+                              
+                              if (length(LIDSan) > 0) { # only report LIDS if LIDS analyses were succesful
+                                LIDS_NS = LIDSan$LIDS_NS
+                                LIDS_S = unlist(LIDSan$LIDS_S)
+                                #TO DO: tidy up last simulated data appended to the end
+                                fit.LIDS = lm(LIDS_NS$LIDSfitted ~ LIDS_NS$cycle_full)
+                                maxperiod = max(LIDS_NS$period,na.rm = TRUE)
+                                medianperiod = median(LIDS_NS$period,na.rm = TRUE)
+                                residuals = resid(fit.LIDS)
+                                MeanAmplitude = sd(residuals)
+                                # #------------------------------
+                                # # TO DO: Remove next lines
+                                epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
+                                time_LIDS = LIDS_NS$time
+                                # x11();plot(time_LIDS,type="l")
+                                # x11()
+                                # par(mfrow=c(2,2),mar=c(4,4,4,1))
+                                # plot(time_LIDS, LIDS_NS$LIDSraw, type="l",main="LIDS",col="black",ylab="LIDS score",xlab="time (minutes)",bty="l")
+                                # lines(time_LIDS, LIDS_NS$LIDSfitted + LIDS_NS$DC,type="l",col="blue",ylab="LIDS raw")
+                                # legend("bottomright",legend = c("LIDS raw","LIDS fitted"),col=c("black","blue"),lty = c(1,1),cex=0.8)
+                                # plot(LIDS_NS$cycle_interpol, LIDS_NS$LIDSfitted_abs_norm_interpol,type="l",main="LIDS",ylab="LIDS score",xlab="cycle",bty="l",col="blue")
+                                # legend("bottomright",legend = c("LIDS raw"),col=c("blue"),lty = c(1,1),cex=0.8)
+                                # plot(time_LIDS,LIDS_NS$period,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="time (minutes)",bty="l")
+                                # plot(LIDS_NS$cycle_interpol,LIDS_NS$LIDSperiod_interpol,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="cycle",bty="l")
+                                # #------------------------------
+                                # Add LIDS to summary
+                                # print(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
+                                #         coef(fit.LIDS), MeanAmplitude,
+                                #         maxperiod,medianperiod))
+                                dsummary[di,fi:(fi+14)] = as.vector(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
+                                                                      coef(fit.LIDS), MeanAmplitude,
+                                                                      maxperiod,medianperiod, LIDS_S))
+                              } else {
+                                dsummary[di,fi:(fi+14)] = rep("",15)
+                              }
                             } else {
-                              dsummary[di,fi:(fi+13)] = rep("",14)
+                              # no sleep bouts found
+                              dsummary[di,fi:(fi+14)] = rep("",15)
                             }
                           } else {
-                            # no sleep bouts found
-                            dsummary[di,fi:(fi+13)] = rep("",14)
+                            dsummary[di,fi:(fi+14)] = rep("",15)
                           }
-                        } else {
-                          dsummary[di,fi:(fi+13)] = rep("",14)
+                          
+                          # TO DO: Also store max, median correlation 
+                          
+                          ds_names[fi:(fi+14)] = c("LIDS_sleepboutlength_min","LIDS_sleepboutstart_char",
+                                                   "LIDS_sleepboutstart_num",
+                                                   "LIDS_Intercept","LIDS_Slope","LIDS_MeanAmplitude",
+                                                   "LIDS_maxperiod_min","LIDS_medianperiod_min",
+                                                   "LIDS_StationaryPeriod","LIDS_StationaryPhase","LIDS_StationaryDC",
+                                                   "LIDS_StationaryCorrP","LIDS_StationaryCorr","LIDS_StationaryMRI","RoO")
+                          fi = fi + 15
                         }
-                        ds_names[fi:(fi+13)] = c("LIDS_sleepboutlength_min","LIDS_sleepboutstart_char","LIDS_sleepboutstart_num",
-                                                 "LIDS_Intercept","LIDS_Slope", "LIDS_MeanAmplitude",
-                                                 "LIDS_maxperiod_min","LIDS_medianperiod_min",
-                                                 "LIDS_StationaryPhase","LIDS_StationaryPeriode","LIDS_StationaryAmplitude",
-                                                 "LIDS_StationaryCorr","LIDS_StationaryCorrP","LIDS_StationaryMRI")
-                        fi = fi + 14
                         #===============================================
                         # NUMBER OF BOUTS
                         checkshape = function(boutcount) {

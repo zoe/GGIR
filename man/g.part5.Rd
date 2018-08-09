@@ -19,7 +19,7 @@ g.part5(datadir=c(), metadatadir=c(), f0=c(), f1=c(), strategy=1,
   boutdur.mvpa = c(1,5,10), boutdur.in = c(10,20,30), 
   boutdur.lig = c(1,5,10), winhr = 5, M5L5res = 10,
   overwrite=FALSE, desiredtz="Europe/London", 
-  bout.metric=4, dayborder=0, save_ms5rawlevels=FALSE)
+  bout.metric=4, dayborder=0, save_ms5rawlevels=FALSE, do.LIDS = FALSE)
 
 }
 \arguments{
@@ -161,6 +161,9 @@ g.part5(datadir=c(), metadatadir=c(), f0=c(), f1=c(), strategy=1,
   }
   \item{save_ms5rawlevels}{
    boolean, whether to save the time series classification (levels) as a csv files
+  }
+  \item{do.LIDS}{
+   boolean, whether to do LIDS analysis (default: FALSE).
   }
   
   

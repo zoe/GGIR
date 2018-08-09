@@ -9,7 +9,8 @@
   and Roenneberg et al. http://dx.doi.org/10.1016/bs.mie.2014.11.028.
 }
 \usage{
-  g.LIDS.analyse(acc = c(), ws3 = 5,best.LIDS.metric=2)
+  g.LIDS.analyse(acc = c(), ws3 = 5,best.fit.criterion.cosine = 2, 
+                          min_period = 30, max_period = 180, step_period = 5)
 }
 \arguments{
   \item{acc}{
@@ -18,8 +19,8 @@
   \item{ws3}{
     Duration (seconds) of the epoch one value of acc corresponds to
   }
-  \item{best.LIDS.metric}{
-    Metric to select the best LIDS (1=correlation ,2=correlation x range)
+  \item{best.fit.criterion.cosine}{
+    Metric to select the best cosine fit (1=correlation ,2=correlation x range)
   }
   \item{min_period}{
     Minimum period length to consider (minutes)
@@ -65,7 +66,9 @@ hase=SCF$phase,period = per,amplitude = amplitude,cor = ct2$cor, pvalue = ct2$pv
 }
 \examples{
   acc = abs(rnorm(n = 1200,mean = 20,sd = 5)) # generate random numbers to test
-  LIDSvars = g.LIDS.analyse(acc=acc,ws3=5)
+  LIDSvars = g.LIDS.analyse(acc=acc,ws3=5,
+              best.fit.criterion.cosine = 2, 
+              min_period = 30, max_period = 180, step_period = 5)
 }
 \author{
 Vincent T van Hees <vincentvanhees@gmail.com>
