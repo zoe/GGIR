@@ -10,7 +10,7 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                    winhr = 5,
                    M5L5res = 10,
                    overwrite=FALSE,desiredtz="Europe/London",bout.metric=4, dayborder = 0, save_ms5rawlevels = FALSE,
-                   do.LIDS = FALSE) {
+                   do.LIDS = FALSE, LIDS2csv = FALSE) {
   options(encoding = "UTF-8")
   # description: function called by g.shell.GGIR
   # aimed to merge the milestone output from g.part2, g.part3, and g.part4
@@ -45,6 +45,16 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
   # fnames.ms5raw = sort(dir(paste(metadatadir,"/meta/ms5.outraw",sep="")))
   # results
   results = paste(metadatadir,"/results",sep="")
+  
+  # create folder for LIDS output if it does not exist yet
+  LIDSfolder = "/meta/LIDS"
+  if (LIDS2csv==TRUE) {
+    if (file.exists(paste(metadatadir,LIDSfolder,sep=""))) {
+    } else {
+      dir.create(file.path(metadatadir,LIDSfolder))
+    }
+  }
+  
   #------------------------------------------------
   # specify parameters
   ffdone = fnames.ms5 #ffdone is now a list of files that have already been processed by g.part5
@@ -745,17 +755,20 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             }
                             # 2. Apply LIDS analysis per bout
                             if (length(which(sleepbouts[,1] != 0)) > 0) {
-                              sleepboutlength = (sleepbouts[1,2] - sleepbouts[1,1]) / (60/ws3) # in minutes
-                              time_boutstart_hr = hour[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
-                              time_boutstart_min = min[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
-                              time_boutstart_sec = sec[sse][which(diur[sse] == 1)][sleepbouts[1,1]]
+                              # TO DO: This currently only considers the first sleep bout, implement loop to analyse all sleep bouts?
+                              
+                              sleepboutnr = 1
+                              sleepboutlength = (sleepbouts[sleepboutnr,2] - sleepbouts[sleepboutnr,1]) / (60/ws3) # in minutes
+                              time_boutstart_hr = hour[sse][which(diur[sse] == 1)][sleepbouts[sleepboutnr,1]]
+                              time_boutstart_min = min[sse][which(diur[sse] == 1)][sleepbouts[sleepboutnr,1]]
+                              time_boutstart_sec = sec[sse][which(diur[sse] == 1)][sleepbouts[sleepboutnr,1]]
                               
                               time_sleepboutstart_char = paste0(time_boutstart_hr,":",time_boutstart_min,":",time_boutstart_sec)
                               if (time_boutstart_hr < 24) time_boutstart_hr = time_boutstart_hr + 24
                               time_sleepboutstart_num = time_boutstart_hr + time_boutstart_min/60 + time_boutstart_sec/(3600)
                               
-                              accnight = accnight[sleepbouts[1,1]:sleepbouts[1,2]]
-                              # TO DO: This currently only considers the first sleep bout, implement loop to analyse all sleep bouts?
+                              accnight = accnight[sleepbouts[sleepboutnr,1]:sleepbouts[sleepboutnr,2]]
+                              
                               # #------------------------------
                               # # TO DO: Remove next lines
                               # x11()
@@ -810,6 +823,13 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                                                             maxMRI, medianMRI,
                                                             LIDS_S))
                                 dsummary[di,fi:(fi+19)] = LIDSvariables
+                                
+                                if (LIDS2csv == TRUE) {
+                                  LIDSoutputfilename = paste(metadatadir,LIDSfolder,"/file_",fnames.ms3[i],"_night_",wi,"_bout_",sleepboutnr,".csv",sep="")
+                                  write.csv(LIDS_NS,
+                                            file = LIDSoutputfilename, row.names = FALSE)
+                                }
+                                
                               } else {
                                 # LIDS skipped because analyses not succesful
                                 dsummary[di,fi:(fi+19)] = rep("",20)

@@ -151,6 +151,9 @@ g.shell.GGIR = function(mode=c(1,2),datadir=c(),outputdir=c(),studyname=c(),f0=1
   if (length(which(ls() == "boutdur.lig")) == 0)  boutdur.lig = c(1,5,10)
   if (length(which(ls() == "save_ms5rawlevels")) == 0) save_ms5rawlevels = FALSE
   if (length(which(ls() == "do.LIDS")) == 0) do.LIDS = FALSE
+  if (length(which(ls() == "LIDS2csv")) == 0) LIDS2csv = FALSE
+  
+  
   
   # part 2
   if (length(which(ls() == "mvpadur")) == 0)  mvpadur = c(1,5,10) # related to part 2 (functionality to anticipate part 5)
@@ -241,7 +244,7 @@ g.shell.GGIR = function(mode=c(1,2),datadir=c(),outputdir=c(),studyname=c(),f0=1
             boutdur.lig = boutdur.lig,
             winhr = winhr,M5L5res = M5L5res,
             overwrite=overwrite,desiredtz=desiredtz,save_ms5rawlevels = save_ms5rawlevels,
-            do.LIDS = do.LIDS)
+            do.LIDS = do.LIDS, LIDS2csv = LIDS2csv)
   }
   
   #==========================
