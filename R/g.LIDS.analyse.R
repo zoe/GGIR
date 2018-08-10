@@ -35,14 +35,19 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
   anyNA = which(is.na(binaryclassification) ==  TRUE)
   if (length(anyNA) > 0) binaryclassification[anyNA] = 0
   binaryclassification_smooth = zoo::rollsum(x=binaryclassification,k=(60*rollsumwindow)/ws3) # 10 minute rolling sum
+  
+  acc_rollmean = zoo::rollmean(x=acc,k=(60*rollsumwindow)/ws3) # 10 minute rolling sum
+  
   # not using align = "center" in the previous step makes that we loose 5 minutes on each end of the time series
   # rescale to 0-100
   binaryclassification_smooth = binaryclassification_smooth / ((rollsumwindow*(60/ws3)) / 100)
   inactivity = 100 / (binaryclassification_smooth + 1) #max value devided by (score + 1)
   
   LIDSraw = zoo::rollmean(x=inactivity,k=(60*30)/ws3,fill = "extend") # 30 minute rolling average
+  acc_rollmean = zoo::rollmean(x=acc_rollmean,k=(60*30)/ws3,fill = "extend") # 30 minute rolling average
   # Downsample to 1 minute resolution to speed up code  
   LIDSraw = LIDSraw[seq(1,length(LIDSraw),by=60/ws3)]
+  acc_aggregated = acc_rollmean[seq(1,length(acc_rollmean),by=60/ws3)]
   #-----------------------------------------------------------------
   # Derive time series
   stepsize = 1 #1 minute
@@ -129,6 +134,7 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
     }
   }
   LIDS_NS$LIDSraw = LIDSraw
+  LIDS_NS$acc_aggregated = acc_aggregated
   #==========================================
   # Stationary
   # PCS: Period comparison stationary
