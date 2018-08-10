@@ -1,13 +1,13 @@
 # By: Vincent van Hees, July 2018
-g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2, 
-                          min_period = 30, max_period = 180, step_period = 5) {
+g.LIDS.analyse = function(acc = c(), ws3 = 5, fit.criterion.cosfit = 2, 
+                          LIDS_cosfit_periods = seq(30,180,by=5)) {
+  # see documentation in .Rd files in the man folder, these are just notes on input / output while
+  # developing the code
   # Input:
   # - acc: vector of acceleration time series
   # - ws3: epoch length of acc (seconds)
-  # - best.fit.criterion.cosine: metric to select the best LIDS (1=cor,2=cor*range)
-  # - min_period: minimum period length to consider (minutes)
-  # - max_period: maximum period length to consider (minutes)
-  # - step_period: stepsize with which to interpolate min and max.
+  # - fit.criterion.cosfit: metric to select the best LIDS (1=cor,2=cor*range)
+  # - LIDS_cosfit_periods = vector with period lengths (minutes) to consider for the cosine fitting.
   # Output:
   # dataframe with the following columns:
   # - time = time (minutes)
@@ -37,7 +37,6 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
   binaryclassification_smooth = zoo::rollsum(x=binaryclassification,k=(60*rollsumwindow)/ws3) # 10 minute rolling sum
   
   acc_rollmean = zoo::rollmean(x=acc,k=(60*rollsumwindow)/ws3) # 10 minute rolling sum
-  
   # not using align = "center" in the previous step makes that we loose 5 minutes on each end of the time series
   # rescale to 0-100
   binaryclassification_smooth = binaryclassification_smooth / ((rollsumwindow*(60/ws3)) / 100)
@@ -82,8 +81,7 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
     ft = a * cos(norm_t) + b * sin(norm_t)
     cor = 0
     pvalue = 1
-    # RoO = abs(diff(range(LIDS,na.rm = TRUE))) # I used to have x
-    RoO = abs(diff(range(ft,na.rm = TRUE))) # I used to have x
+    RoO = abs(diff(range(ft,na.rm = TRUE)))
     if (length(ft) > 0) {
       if (length(which(is.na(ft) == FALSE)) > 0) {
         if (sd(ft) != 0 & sd(LIDS) != 0) {
@@ -94,8 +92,6 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
       }
     }
     MRI <- RoO * cor #Munich Rhythmicity Index MRI
-    # Note: we do not multiply the correlation by the range in the data
-    # because that seems to result in a very eratic score.
     phase= atan(b/a) # should always be: -pi/2 < phase < pi/2
     if (stationary == FALSE) {
       LIDSfitted = ft[halfp]
@@ -104,7 +100,7 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
     }
     return(invisible(list(period=period,phase=phase,DC=DC,LIDSfitted=LIDSfitted,pvalue=pvalue,cor=cor,MRI=MRI,RoO=RoO)))
   }
-  periods = seq(min_period,max_period,by=step_period)
+  
   LIDS_S = LIDS_NS = data.frame(time=1:length(LIDSraw), period=NA, phase=NA, 
                                 LIDSfitted=NA, DC=NA, pvalue=NA, cor=NA, MRI=NA, RoO=NA)
   #==========================================
@@ -112,9 +108,9 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
   cntt = 1
   for (i in 1:length(LIDSraw)) { # Step 1. loop over SPT window epoch by epoch
     #PCNS: Period comparison non stationary
-    PCNS = data.frame(period=periods, phase=NA, DC=NA, LIDSfitted=NA, pvalue=NA, cor=NA, MRI=NA,RoO=NA)
-    for (j in 1:length(periods)) { # Step 2. loop over proposed period lengths (discrete series)
-      period = periods[j]
+    PCNS = data.frame(period=LIDS_cosfit_periods, phase=NA, DC=NA, LIDSfitted=NA, pvalue=NA, cor=NA, MRI=NA,RoO=NA)
+    for (j in 1:length(LIDS_cosfit_periods)) { # Step 2. loop over proposed period lengths (discrete series)
+      period = LIDS_cosfit_periods[j]
       halfp = (period)/ 2
       if (i > halfp & i < ((length(LIDSraw)-halfp)+2) ) {
         y =  LIDSraw[(i-halfp):(i+halfp-1)]
@@ -125,9 +121,9 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
     }
     if (length(which(is.na(PCNS$cor) == FALSE)) > 2) {
       # Step 7. select best period and from that you know instantanious phase
-      if (best.fit.criterion.cosine == 1) {
+      if (fit.criterion.cosfit == 1) {
         bestperiod = PCNS[which.max(PCNS$cor)[1],]
-      } else if (best.fit.criterion.cosine == 2) {
+      } else if (fit.criterion.cosfit == 2) {
         bestperiod = PCNS[which.max(PCNS$MRI)[1],]
       }
       LIDS_NS[i,2:ncol(LIDS_NS)] = bestperiod
@@ -138,23 +134,23 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
   #==========================================
   # Stationary
   # PCS: Period comparison stationary
-  PCS = data.frame(period=periods, phase=NA, DC=NA, LIDSfitted=NA, pvalue=NA, cor=NA, MRI=NA, RoO=NA)
-  for (j in 1:length(periods)) { # Step 2. loop over proposed period lengths (discrete series)
-    period = periods[j]
+  PCS = data.frame(period=LIDS_cosfit_periods, phase=NA, DC=NA, LIDSfitted=NA, pvalue=NA, cor=NA, MRI=NA, RoO=NA)
+  for (j in 1:length(LIDS_cosfit_periods)) { # Step 2. loop over proposed period lengths (discrete series)
+    period = LIDS_cosfit_periods[j]
     PCS[j,] = cosfit(time_min,LIDS = LIDSraw,period, stationary = TRUE) # Step 3-6: Apply cosine fit
   }
   if (length(which(is.na(PCS$cor) == FALSE)) > 2) {
     # Step 7. select best period and from that you know instantanious phase
-    if (best.fit.criterion.cosine == 1) {
+    if (fit.criterion.cosfit == 1) {
       besti = which.max(PCS$cor)[1]
       LIDS_S = PCS[besti,]
-    } else if (best.fit.criterion.cosine == 2) {
+    } else if (fit.criterion.cosfit == 2) {
       LIDS_S = PCS[which.max(PCS$MRI)[1],]
     }
   }
   LIDS_S = LIDS_S[,-c(which(colnames(LIDS_S) == "LIDSfitted"))]
   #------------------------------------------------------------
-  # remove Plateau at the end if there is one
+  # Remove Plateau at the end if there is one
   indexLastValue = max(which(is.na(LIDS_NS$LIDSraw) == FALSE)) # find the last value that is not a NA 
   lastvalue = LIDS_NS$LIDSraw[indexLastValue] #[length(LIDS_NS$LIDSraw)]
   revLIDSraw = rev(LIDS_NS$LIDSraw)
@@ -169,7 +165,7 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
       }
     }
   }
-  # LIDS_NS = LIDS_NS[which(LIDS_NS$cor > 0.8)[1]:nrow(LIDS_NS),]
+  # add cyle to LIDS time series (LIDS_NS object) and interpolate
   if (nrow(LIDS_NS) >= 10 & length(which(is.na(LIDS_NS$LIDSfitted) == FALSE)) > 10) {
     LIDS_NS$cycle = c()
     LIDS_NS$cycle = LIDS_NS$phase + abs(min(LIDS_NS$phase,na.rm = TRUE))
@@ -195,7 +191,6 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, best.fit.criterion.cosine = 2,
     A = approx(LIDS_NS$cycle,LIDS_NS$period, xout = LIDS_NS$cycle_interpol, rule = 2, method = "linear", ties = mean)
     LIDS_NS$LIDSperiod_interpol = A$y
     return(invisible(list(LIDS_NS=LIDS_NS,LIDS_S=LIDS_S)))
-
   } else {
     return()
   }

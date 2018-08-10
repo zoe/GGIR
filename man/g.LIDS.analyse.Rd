@@ -9,8 +9,8 @@
   and Roenneberg et al. http://dx.doi.org/10.1016/bs.mie.2014.11.028.
 }
 \usage{
-  g.LIDS.analyse(acc = c(), ws3 = 5,best.fit.criterion.cosine = 2, 
-                          min_period = 30, max_period = 180, step_period = 5)
+  g.LIDS.analyse(acc = c(), ws3 = 5,fit.criterion.cosfit = 2, 
+                          LIDS_cosfit_periods = seq(30,180,by=5))
 }
 \arguments{
   \item{acc}{
@@ -19,18 +19,13 @@
   \item{ws3}{
     Duration (seconds) of the epoch one value of acc corresponds to
   }
-  \item{best.fit.criterion.cosine}{
+  \item{fit.criterion.cosfit}{
     Metric to select the best cosine fit (1=correlation ,2=correlation x range)
   }
-  \item{min_period}{
-    Minimum period length to consider (minutes)
+  \item{LIDS_cosfit_periods}{
+   vector with period lengths (minutes) to consider for the cosine fitting.
   }
-  \item{max_period}{
-    Maximum period length to consider (minutes)
-  }
-  \item{step_period}{
-    Stepsize with which to interpolate min and max.
-  }
+  
 }
 \value{
 \item{\code{LIDSvars}}{A data.frame with the LIDS variabls, see details}
@@ -47,6 +42,9 @@ The value \code{LIDSvars} is a dataframe and comes with the following variables:
 \item \code{cor} instantanious correlation coefficients between LIDSfitted and LIDSraw
 \item \code{pvalue} instantanious pvalue of the correlation between LIDSfitted and LIDSraw
 \item \code{LIDSraw} inactivity score derived from acc
+\item \code{acc_aggregated} acc value aggregated: acc was first smoothed with a 30 minute
+rolling mean and then aggregated as the mean per epoch, where the epoch is equal to 
+the epoch length of LIDSraw (1 minute by default.
 \item \code{cycle} instantanious cycle relative to start
 \item \code{LIDSfitted_abs} LIDSfitted + DC
 \item \code{cycle_interpol} interpolated cycle
@@ -67,8 +65,8 @@ hase=SCF$phase,period = per,amplitude = amplitude,cor = ct2$cor, pvalue = ct2$pv
 \examples{
   acc = abs(rnorm(n = 1200,mean = 20,sd = 5)) # generate random numbers to test
   LIDSvars = g.LIDS.analyse(acc=acc,ws3=5,
-              best.fit.criterion.cosine = 2, 
-              min_period = 30, max_period = 180, step_period = 5)
+              fit.criterion.cosfit = 2, 
+              LIDS_cosfit_periods =seq(30,180,by=5))
 }
 \author{
 Vincent T van Hees <vincentvanhees@gmail.com>

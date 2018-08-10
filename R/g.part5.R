@@ -10,7 +10,8 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                    winhr = 5,
                    M5L5res = 10,
                    overwrite=FALSE,desiredtz="Europe/London",bout.metric=4, dayborder = 0, save_ms5rawlevels = FALSE,
-                   do.LIDS = FALSE, LIDS2csv = FALSE) {
+                   do.LIDS = FALSE, LIDS2csv = FALSE, LIDS_cosfit_periods = seq(30,180,by=5),
+                   fit.criterion.cosfit = 2,  WakeBoutMin = 30, SleepBoutMin = 180) {
   options(encoding = "UTF-8")
   # description: function called by g.shell.GGIR
   # aimed to merge the milestone output from g.part2, g.part3, and g.part4
@@ -751,13 +752,13 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             sleepbouts = matrix(0,2,2)
                             if (length(WakeBinary) > 0) {
                               sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary, WakeBout.threshold=0.5,
-                                                              WakeBoutMin=30, SleepBoutMin=180, ws3=ws3)
+                                                              WakeBoutMin= WakeBoutMin, SleepBoutMin=SleepBoutMin, ws3=ws3)
                             }
                             # 2. Apply LIDS analysis per bout
                             if (length(which(sleepbouts[,1] != 0)) > 0) {
                               # TO DO: This currently only considers the first sleep bout, implement loop to analyse all sleep bouts?
-                              
                               sleepboutnr = 1
+                              
                               sleepboutlength = (sleepbouts[sleepboutnr,2] - sleepbouts[sleepboutnr,1]) / (60/ws3) # in minutes
                               time_boutstart_hr = hour[sse][which(diur[sse] == 1)][sleepbouts[sleepboutnr,1]]
                               time_boutstart_min = min[sse][which(diur[sse] == 1)][sleepbouts[sleepboutnr,1]]
@@ -782,10 +783,7 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                               # lines(timelinebout,boutline,type="l",col="red")
                               # #-----------------------------------------
                               
-                              # TO DO: Make sure the arguments to this function are not hardcoded, but modifiable
-                              LIDSan = g.LIDS.analyse(acc=accnight,ws3=ws3,best.fit.criterion.cosine=2, min_period = 30,
-                                                      max_period = 180, step_period = 5)
-                              
+                              LIDSan = g.LIDS.analyse(acc=accnight,ws3=ws3,fit.criterion.cosfit=fit.criterion.cosfit, LIDS_cosfit_periods = LIDS_cosfit_periods)
                               if (length(LIDSan) > 0) { # only report LIDS if LIDS analyses were succesful
                                 LIDS_NS = LIDSan$LIDS_NS
                                 LIDS_S = unlist(LIDSan$LIDS_S)
@@ -799,8 +797,6 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                                 medianMRI = median(LIDS_NS$MRI,na.rm = TRUE)
                                 residuals = resid(fit.LIDS)
                                 MeanAmplitude = sd(residuals)
-                                # #------------------------------
-                                # # TO DO: Remove next lines
                                 epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
                                 time_LIDS = LIDS_NS$time
                                 # x11()
@@ -842,9 +838,6 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             # LIDS Skipped because these are the MM (midnight to midnight analysis)
                             dsummary[di,fi:(fi+19)] = rep("",20)
                           }
-                          
-                          # TO DO: Also store max, median correlation 
-                          
                           ds_names[fi:(fi+19)] = c("LIDS_NStation_wakeboutlength_min","LIDS_NStation_sleepboutlength_min",
                                                    "LIDS_NStation_sleepboutstart_char", "LIDS_NStation_sleepboutstart_num",
                                                    "LIDS_NStation_Intercept","LIDS_NStation_Slope",

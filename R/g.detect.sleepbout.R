@@ -1,5 +1,6 @@
-g.detect.sleepbout = function(WakeBinary=c(),WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=5) {
+g.detect.sleepbout = function(WakeBinary=c(), WakeBout.threshold=0.5, WakeBoutMin=30, SleepBoutMin=180,ws3=5) {
   # Detect sleep bouts (here defined as Bouts of at least 3 hours with < 50% wakefullness).
+  # and duration of the sleep bout that follows the sleep bout within the Sleep Period Time window (SPT)
   #------------------------------------
   # Apply 30 minute rolling average to derive ratio of wakefulleness
   WakeBinary = zoo::rollmean(x=WakeBinary,k=(30*(60/ws3)),fill = "extend",align="center")

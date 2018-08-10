@@ -20,8 +20,8 @@ g.part5(datadir=c(), metadatadir=c(), f0=c(), f1=c(), strategy=1,
   boutdur.lig = c(1,5,10), winhr = 5, M5L5res = 10,
   overwrite=FALSE, desiredtz="Europe/London", 
   bout.metric=4, dayborder=0, save_ms5rawlevels=FALSE, do.LIDS = FALSE,
-  LIDS2csv = FALSE)
-
+  LIDS2csv = FALSE, LIDS_cosfit_periods = seq(30,180,by=5), fit.criterion.cosfit = 2,
+  WakeBoutMin = 30, SleepBoutMin = 180)
 }
 \arguments{
   \item{datadir}{
@@ -169,8 +169,19 @@ g.part5(datadir=c(), metadatadir=c(), f0=c(), f1=c(), strategy=1,
   \item{LIDS2csv}{
    Whether to export LIDS analysis time series to csv file (default: FALSE)
   }
-  
-  
+  \item{LIDS_cosfit_periods}{
+   vector with period lengths (minutes) to consider for the cosine fitting
+  }
+  \item{fit.criterion.cosfit}{
+   Criterion to select the best cosine fit in the LIDS analysis: 1 = highest correlation;
+   2 = highest correlation time range of observation (proxy for amplitude), also referred to as MRI.
+  }
+   \item{WakeBoutMin}{
+   Mininum duration of a Wakefullness Bout (minutes)
+  }
+  \item{SleepBoutMin}{
+   Mininum duration of a Sleep Bout (minutes)
+  }
 }
 \value{
  The function provides no values, it only ensures that other functions are called

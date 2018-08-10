@@ -152,6 +152,10 @@ g.shell.GGIR = function(mode=c(1,2),datadir=c(),outputdir=c(),studyname=c(),f0=1
   if (length(which(ls() == "save_ms5rawlevels")) == 0) save_ms5rawlevels = FALSE
   if (length(which(ls() == "do.LIDS")) == 0) do.LIDS = FALSE
   if (length(which(ls() == "LIDS2csv")) == 0) LIDS2csv = FALSE
+  if (length(which(ls() == "LIDS_cosfit_periods")) == 0) LIDS_cosfit_periods = seq(30,180,by=5)
+  if (length(which(ls() == "fit.criterion.cosfit")) == 0) fit.criterion.cosfit = 2
+  if (length(which(ls() == "WakeBoutMin")) == 0) WakeBoutMin = 30
+  if (length(which(ls() == "SleepBoutMin")) == 0) SleepBoutMin = 180
   
   
   
@@ -244,7 +248,9 @@ g.shell.GGIR = function(mode=c(1,2),datadir=c(),outputdir=c(),studyname=c(),f0=1
             boutdur.lig = boutdur.lig,
             winhr = winhr,M5L5res = M5L5res,
             overwrite=overwrite,desiredtz=desiredtz,save_ms5rawlevels = save_ms5rawlevels,
-            do.LIDS = do.LIDS, LIDS2csv = LIDS2csv)
+            do.LIDS = do.LIDS, LIDS2csv = LIDS2csv, LIDS_cosfit_periods = LIDS_cosfit_periods,
+            fit.criterion.cosfit=fit.criterion.cosfit,  WakeBoutMin = WakeBoutMin,
+            SleepBoutMin=SleepBoutMin)
   }
   
   #==========================
