@@ -27,10 +27,14 @@
     Integer to indicate the epoch length of the WakeBinary vector in seconds.
   }
 }
-\value{
-  matrix with start and end index of sleep bouts.
+\details{
+  A sleepbout is defined here as a period of at least 3 hours in which the rolling
+  30 minute window consists of less than 50 percent wakefullness.
 }
-
+\value{
+  matrix with start and end index of sleep bouts, and as third column the duration of
+  wakefullness bout that follows the slpee bout.
+}
 
 \examples{
   WakeBinary = c(rep(0,12*60*4),rep(1,12*40),rep(0,12*60,2)) # dummy input

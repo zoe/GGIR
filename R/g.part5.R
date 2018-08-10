@@ -740,7 +740,8 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                             WakeBinary = ifelse(test=levelsnight==0,yes = 0,no = 1) #sleep = 0, wake = 1
                             sleepbouts = matrix(0,2,2)
                             if (length(WakeBinary) > 0) {
-                              sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary,WakeBout.threshold=0.5,WakeBoutMin=30,SleepBoutMin=180,ws3=ws3)
+                              sleepbouts = g.detect.sleepbout(WakeBinary=WakeBinary, WakeBout.threshold=0.5,
+                                                              WakeBoutMin=30, SleepBoutMin=180, ws3=ws3)
                             }
                             # 2. Apply LIDS analysis per bout
                             if (length(which(sleepbouts[,1] != 0)) > 0) {
@@ -778,14 +779,17 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                                 #TO DO: tidy up last simulated data appended to the end
                                 fit.LIDS = lm(LIDS_NS$LIDSfitted ~ LIDS_NS$cycle_full)
                                 maxperiod = max(LIDS_NS$period,na.rm = TRUE)
+                                maxcor = max(LIDS_NS$cor,na.rm = TRUE)
+                                maxMRI = max(LIDS_NS$MRI,na.rm = TRUE)
                                 medianperiod = median(LIDS_NS$period,na.rm = TRUE)
+                                mediancor = median(LIDS_NS$cor,na.rm = TRUE)
+                                medianMRI = median(LIDS_NS$MRI,na.rm = TRUE)
                                 residuals = resid(fit.LIDS)
                                 MeanAmplitude = sd(residuals)
                                 # #------------------------------
                                 # # TO DO: Remove next lines
                                 epochtime = ((1:length(ACC[sse][which(diur[sse] == 1)])) * 5) / 60
                                 time_LIDS = LIDS_NS$time
-                                # x11();plot(time_LIDS,type="l")
                                 # x11()
                                 # par(mfrow=c(2,2),mar=c(4,4,4,1))
                                 # plot(time_LIDS, LIDS_NS$LIDSraw, type="l",main="LIDS",col="black",ylab="LIDS score",xlab="time (minutes)",bty="l")
@@ -797,32 +801,40 @@ g.part5 = function(datadir=c(),metadatadir=c(),f0=c(),f1=c(),strategy=1,maxdur=7
                                 # plot(LIDS_NS$cycle_interpol,LIDS_NS$LIDSperiod_interpol,type="l",main="LIDS period",ylab = "period length (minutes)",xlab="cycle",bty="l")
                                 # #------------------------------
                                 # Add LIDS to summary
-                                # print(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
-                                #         coef(fit.LIDS), MeanAmplitude,
-                                #         maxperiod,medianperiod))
-                                dsummary[di,fi:(fi+14)] = as.vector(c(sleepboutlength, time_sleepboutstart_char,time_sleepboutstart_num,
-                                                                      coef(fit.LIDS), MeanAmplitude,
-                                                                      maxperiod,medianperiod, LIDS_S))
+                                LIDSvariables = as.vector(c(sleepbouts[1,3], sleepboutlength,
+                                                            time_sleepboutstart_char,time_sleepboutstart_num,
+                                                            coef(fit.LIDS),
+                                                            MeanAmplitude, maxperiod, medianperiod,
+                                                            
+                                                            maxcor, mediancor,
+                                                            maxMRI, medianMRI,
+                                                            LIDS_S))
+                                dsummary[di,fi:(fi+19)] = LIDSvariables
                               } else {
-                                dsummary[di,fi:(fi+14)] = rep("",15)
+                                # LIDS skipped because analyses not succesful
+                                dsummary[di,fi:(fi+19)] = rep("",20)
                               }
                             } else {
-                              # no sleep bouts found
-                              dsummary[di,fi:(fi+14)] = rep("",15)
+                              # LIDS skipped because no sleep bouts found
+                              dsummary[di,fi:(fi+19)] = rep("",20)
                             }
                           } else {
-                            dsummary[di,fi:(fi+14)] = rep("",15)
+                            # LIDS Skipped because these are the MM (midnight to midnight analysis)
+                            dsummary[di,fi:(fi+19)] = rep("",20)
                           }
                           
                           # TO DO: Also store max, median correlation 
                           
-                          ds_names[fi:(fi+14)] = c("LIDS_sleepboutlength_min","LIDS_sleepboutstart_char",
-                                                   "LIDS_sleepboutstart_num",
-                                                   "LIDS_Intercept","LIDS_Slope","LIDS_MeanAmplitude",
-                                                   "LIDS_maxperiod_min","LIDS_medianperiod_min",
-                                                   "LIDS_StationaryPeriod","LIDS_StationaryPhase","LIDS_StationaryDC",
-                                                   "LIDS_StationaryCorrP","LIDS_StationaryCorr","LIDS_StationaryMRI","RoO")
-                          fi = fi + 15
+                          ds_names[fi:(fi+19)] = c("LIDS_NStation_wakeboutlength_min","LIDS_NStation_sleepboutlength_min",
+                                                   "LIDS_NStation_sleepboutstart_char", "LIDS_NStation_sleepboutstart_num",
+                                                   "LIDS_NStation_Intercept","LIDS_NStation_Slope",
+                                                   "LIDS_NStation_MeanAmplitude", 
+                                                   "LIDS_NStation_maxperiod_min","LIDS_NStation_medianperiod_min",
+                                                   "LIDS_NStation_maxcor","LIDS_NStation_mediancor",
+                                                   "LIDS_NStation_maxMRI","LIDS_NStation_medianMRI",
+                                                   "LIDS_Station_Period","LIDS_Station_Phase","LIDS_Station_DC",
+                                                   "LIDS_Station_CorrP","LIDS_Station_Corr","LIDS_Station_MRI","LIDS_Station_RoO")
+                          fi = fi + 20
                         }
                         #===============================================
                         # NUMBER OF BOUTS
