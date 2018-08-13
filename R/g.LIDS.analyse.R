@@ -34,20 +34,30 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, fit.criterion.cosfit = 2,
   rollsumwindow = 10
   anyNA = which(is.na(binaryclassification) ==  TRUE)
   if (length(anyNA) > 0) binaryclassification[anyNA] = 0
-  binaryclassification_smooth = zoo::rollsum(x=binaryclassification,k=(60*rollsumwindow)/ws3) # 10 minute rolling sum
-  
+  binaryclassification_smooth = zoo::rollsum(x=binaryclassification,
+                                             k=(60*rollsumwindow)/ws3) # 10 minute rolling sum
+  # add: ,fill= NA ?
   acc_rollmean = zoo::rollmean(x=acc,k=(60*rollsumwindow)/ws3) # 10 minute rolling sum
+  # use instead rollapply? acc_rollmean = zoo::rollapply(data=acc,width=(60*rollsumwindow)/ws3, fill=NA, by = 1, # 30 minute rolling average
+  #                               partial=T,FUN=function(x) mean(x,na.rm=T))
+  
   # not using align = "center" in the previous step makes that we loose 5 minutes on each end of the time series
   # rescale to 0-100
   binaryclassification_smooth = binaryclassification_smooth / ((rollsumwindow*(60/ws3)) / 100)
   inactivity = 100 / (binaryclassification_smooth + 1) #max value devided by (score + 1)
-  
   LIDSraw = zoo::rollmean(x=inactivity,k=(60*30)/ws3,fill = "extend") # 30 minute rolling average
-  acc_rollmean = zoo::rollmean(x=acc_rollmean,k=(60*30)/ws3,fill = "extend") # 30 minute rolling average
+  # use instead rollapply? LIDSraw = zoo::rollapply(data=inactivity,width=(60*30)/ws3, fill=NA, by = 1, # 30 minute rolling average
+  #                          partial=T,FUN=function(x) mean(x,na.rm=T))
+  
+  acc_rollmean = zoo::rollmean(x=acc_rollmean,k=(60*30)/ws3,fill= "extend") # 30 minute rolling average
+  # use instead rollapply? acc_rollmean = zoo::rollapply(data=acc_rollmean,width=(60*30)/ws3, fill=NA, by = 1, # 30 minute rolling average
+  #                          partial=T,FUN=function(x) mean(x,na.rm=T))
+
   # Downsample to 1 minute resolution to speed up code  
   LIDSraw = LIDSraw[seq(1,length(LIDSraw),by=60/ws3)]
   acc_aggregated = acc_rollmean[seq(1,length(acc_rollmean),by=60/ws3)]
-  #-----------------------------------------------------------------
+  
+    #-----------------------------------------------------------------
   # Derive time series
   stepsize = 1 #1 minute
   time_min = (1:length(LIDSraw)) * stepsize
@@ -84,7 +94,7 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, fit.criterion.cosfit = 2,
     RoO = abs(diff(range(ft,na.rm = TRUE)))
     if (length(ft) > 0) {
       if (length(which(is.na(ft) == FALSE)) > 0) {
-        if (sd(ft) != 0 & sd(LIDS) != 0) {
+        if (sd(ft,na.rm = T) != 0 & sd(LIDS) != 0) {
           ct = stats::cor.test(ft,LIDS)
           pvalue = ct$p.value
           cor = ct$estimate
@@ -114,7 +124,7 @@ g.LIDS.analyse = function(acc = c(), ws3 = 5, fit.criterion.cosfit = 2,
       halfp = (period)/ 2
       if (i > halfp & i < ((length(LIDSraw)-halfp)+2) ) {
         y =  LIDSraw[(i-halfp):(i+halfp-1)]
-        if (sd(y) > 0) {
+        if (sd(y, na.rm = T) > 0) {
           PCNS[j,] = cosfit(time_min,LIDS = y,period, stationary = FALSE) # Step 3-6: Apply cosine fit
         }
       }
