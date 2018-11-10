@@ -159,6 +159,8 @@ g.part4 = function(datadir=c(),metadatadir=c(),f0=f0,f1=f1,idloc=1,loglocation =
       # load milestone 3 data (RData files), check whether there is data, identify id numbers...
       load(paste(meta.sleep.folder,"/",fnames[i],sep=""))
       if (nrow(sib.cla.sum) != 0) { #there needs to be some information
+        sib.cla.sum$sib.onset.time = iso8601chartime2POSIX(sib.cla.sum$sib.onset.time, tz = desiredtz)
+        sib.cla.sum$sib.end.time = iso8601chartime2POSIX(sib.cla.sum$sib.end.time, tz = desiredtz)
         #------------------------------------------------------
         # extract the identifier from accelerometer data
         if (idloc == 2) { #idloc is an argument to specify where the participant identifier can be found
@@ -189,9 +191,31 @@ g.part4 = function(datadir=c(),metadatadir=c(),f0=f0,f1=f1,idloc=1,loglocation =
         if (dolog == TRUE) {
           if (sleeplogidnum == FALSE) {
             wi = which(as.character(sleeplog$id) == as.character(accid))
+            if (length(wi) == 0) {
+              wi_alternative = which(sleeplog$id == as.numeric(accid))
+              if (length(wi_alternative) > 0) {
+                cat("\nWarning: argument sleeplogidnum is set to FALSE, but it seems the identifiers are
+                    stored as numeric values, you may want to consider changing sleeplogidnum to TRUE")
+              } else {
+                cat(paste0("\nWarning: sleeplog id is stored as format: ", as.character(sleeplog$id[1]),", while
+                           code expects format: ",as.character(accid[1])))
+                
+              }
+            }
           } else {
             wi = which(sleeplog$id == as.numeric(accid))
+            if (length(wi) == 0) {
+              wi_alternative = which(as.character(sleeplog$id) == as.character(accid))
+              if (length(wi_alternative) > 0) {
+                cat("\nWarning: argument sleeplogidnum is set to TRUE, but it seems the identifiers are
+                    stored as characrter values, you may want to consider changing sleeplogidnum to TRUE")
+              } else {
+                cat(paste0("\nWarning: sleeplog id is stored as format: ", as.character(sleeplog$id[1]),", while
+                           code expects format: ",as.character(accid[1])))
+              }
+            }
           }
+          
         } else {
           wi = 1
         } 

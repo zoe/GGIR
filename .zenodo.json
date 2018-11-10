@@ -3,40 +3,47 @@
         {
             "affiliation": "Netherlands eScience Center",
             "name": "van Hees, Vincent",
-            "orcid": "https://orcid.org/0000-0003-0182-9008"
+            "orcid": "0000-0003-0182-9008"
         },
         {
-            "affiliation": "Biomathematics and Statistics Scotland, UK",
+            "affiliation": "Activinsights Ltd.",
             "name": "Fang, Zhou"
         },
         {
-            "affiliation": "MRC Epidemiology Unit, Cambridge, UK",
-            "name": "Zhao, Jing Hua"
+            "affiliation": "University of Leicester",
+            "name": "Mirkes, Evgeny",
+            "orcid": "0000-0003-1474-1734"
         },
         {
-            "affiliation": "Centre for Longitudinal Studies, University College London, London, UK",
+            "affiliation": "University College London",
             "name": "Heywood, Joe"
         },
         {
-            "affiliation": "Department of Mathematics, University of Leicester, UK, Siberian Federal University, Krasnoyarsk, Rusia",
-            "name": "Mirkes, Evgeny"
+            "affiliation": "MRC Epidemiology Unit",
+            "name": "Zhao, Jing Hua",
+            "orcid": "0000-0003-4930-3582"
         },
         {
-            "affiliation": "Faculty of Physical Activity and Sport Sciences, University of Granada, Spain",
-            "name": "Migueles, Jairo"
+            "affiliation": "Inserm",
+            "name": "Sabia, Séverine",
+            "orcid": "0000-0003-3109-9720"
         },
         {
-            "affiliation": "INSERM, French Institute of Health and Medical Research, Paris, France",
-            "name": "Sabia, Severine"
+            "affiliation": "University of Granada",
+            "name": "Migueles, Jairo H.",
+            "orcid": "0000-0003-0366-6935"
         }
     ],
+    "description": "Converts raw data from wearables into insightful reports for researchers investigating human daily physical activity and sleep.",
     "keywords": [
-        "accelerometry",
-        "signal processing",
-        "time series"
+        "activity tracker",
+        "health",
+        "fitness",
+        "sleep research",
+        "accelerometer"
     ],
     "license": {
-        "id": "LGPL-2.0-or-later"
+        "id": "LGPL-2.0-only"
     },
     "title": "GGIR"
 }

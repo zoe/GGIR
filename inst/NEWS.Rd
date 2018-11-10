@@ -1,7 +1,36 @@
 \name{NEWS}
 \title{News for Package \pkg{GGIR}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
+\section{Changes in version 1.6-8 (release date:9-11-2018)}{
+\itemize{
+  \item Order of Nbouts output in g.part5 was not consistent with bout duration, 
+  which is fixed now.
+  \item Bug fixed that caused the date of the lates measurement day in part5 output
+  to be one day ahead when dayborder=12.
+  \item Part5 struggled to process measurement with more than 40 days, now fixed.
+  \item g.getstarttime can now also handle dates in Actigraph csv-file headers that are
+  dot separated, e.g. 20.05.2016, before it only handled 20-05-2016 and 20/05/2016.
+  }
+}
 
+\section{Changes in version 1.6-7 (release date:23-9-2018)}{
+\itemize{
+  \item Link with Zenodo for doi generation removed.
+  \item Broken url fixed in vignette.
+  }
+}
+\section{Changes in version 1.6-1 (release date:21-9-2018)}{
+\itemize{
+  \item Report part 4: Count of available nights with accelerometer data fixed
+  \item Report part 4: NA and NaN values replaced by empty cells like in other reports
+  \item Intensity gradient analysis added to part2 output according to Rowlands et al.
+  MSSE 2018, doi: 10.1249/MSS.0000000000001561
+  \item Documentation on part4 output variables improved.
+  \item Providing incorrect value of sleeplogidnum in part4 should now provide a more
+  informative error message
+  \item Added functionality to handle timestamps that start with the year.
+  }
+}
 \section{Changes in version 1.6-0 (release date:29-7-2018)}{
 \itemize{
   \item Fixed timezone dependency of g.analyse (affected only order of columns), g.part5
