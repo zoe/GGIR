@@ -21,6 +21,7 @@ g.part5(datadir=c(), metadatadir=c(), f0=c(), f1=c(), strategy=1,
   overwrite=FALSE, desiredtz="Europe/London", 
   bout.metric=4, dayborder=0, save_ms5rawlevels=FALSE, do.LIDS = FALSE,
   LIDS2csv = FALSE, LIDS_cosfit_periods = seq(30,180,by=5), fit.criterion.cosfit = 2,
+  nonstationary = FALSE,
   WakeBoutMin = 30, SleepBoutMin = 180)
 }
 \arguments{
@@ -175,6 +176,9 @@ g.part5(datadir=c(), metadatadir=c(), f0=c(), f1=c(), strategy=1,
   \item{fit.criterion.cosfit}{
    Criterion to select the best cosine fit in the LIDS analysis: 1 = highest correlation;
    2 = highest correlation time range of observation (proxy for amplitude), also referred to as MRI.
+  }
+  \item{nonstationary}{
+   Boolean to indicate whether nonstationary analysis should be performed
   }
    \item{WakeBoutMin}{
    Mininum duration of a Wakefullness Bout (minutes)
