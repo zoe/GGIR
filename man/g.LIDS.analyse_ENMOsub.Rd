@@ -1,5 +1,5 @@
-\name{g.LIDS.analyse}
-\alias{g.LIDS.analyse}
+\name{g.LIDS.analyse_ENMOsub}
+\alias{g.LIDS.analyse_ENMOsub}
 \title{
   Analyse Locomoter Inactivity During Sleep (LIDS)
 }
@@ -9,7 +9,7 @@
   and Roenneberg et al. http://dx.doi.org/10.1016/bs.mie.2014.11.028.
 }
 \usage{
-  g.LIDS.analyse(acc = c(), ws3 = 5,fit.criterion.cosfit = 2, 
+  g.LIDS.analyse_ENMOsub(acc = c(), ws3 = 5,fit.criterion.cosfit = 2, 
                           LIDS_cosfit_periods = seq(30,180,by=5),
                           nonstationary=FALSE)
 }
@@ -68,9 +68,9 @@ hase=SCF$phase,period = per,amplitude = amplitude,cor = ct2$cor, pvalue = ct2$pv
 }
 \examples{
   acc = abs(rnorm(n = 1200,mean = 20,sd = 5)) # generate random numbers to test
-  LIDSvars = g.LIDS.analyse(acc=acc,ws3=5,
+  LIDSvars = g.LIDS.analyse_ENMOsub(acc=acc,ws3=5,
               fit.criterion.cosfit = 2, 
-              LIDS_cosfit_periods =seq(30,180,by=5))
+              LIDS_cosfit_periods =seq(30,180,by=5),nonstationary=FALSE)
 }
 \author{
 Vincent T van Hees <vincentvanhees@gmail.com>
