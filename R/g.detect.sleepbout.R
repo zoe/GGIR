@@ -35,7 +35,7 @@ g.detect.sleepbout = function(WakeBinary=c(), WakeBout.threshold=0.5, WakeBoutMi
             }
             if (diff(B) > (SleepBoutMin*(60/ws3))) { # Check whether it is at least SleepBoutMin (default 3 hours)
                 WakeDurAfter = BoutlengthsWake[LWi]/(60/ws3)
-                WakeDurAfter = WakeDurAfter - 300 # remove dummy data
+                WakeDurAfter = WakeDurAfter - (WakeBoutMin*10) # remove dummy data
                 sleepbouts[sleepbouti,] = c(B, WakeDurAfter) #Store these in the output matrix
                 sleepbouti = sleepbouti + 1
                 if (sleepbouti > (nrow(sleepbouts) - 3)) sleepbouts = rbind(sleepbouts,matrix(0,5,3))
