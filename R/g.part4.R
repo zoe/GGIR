@@ -134,6 +134,24 @@ g.part4 = function(datadir=c(),metadatadir=c(),f0=f0,f1=f1,idloc=1,loglocation =
     return(paste0(HR,":",MI,":",SE))
   }
   
+  convertHRsinceprevMN2Clocktime = function(x) {
+    # x = hours Since Previous Midnight
+    HR = floor(x)
+    MI = floor((x - floor(x)) * 60)
+    SE = round(((x - HR) - (MI/60)) * 3600)
+    if (SE == 60) {
+      MI = MI + 1; SE = 0
+    }
+    if (MI == 60) {
+      HR = HR + 1; MI = 0
+    }
+    if (HR == 24) HR = 0
+    if (HR < 10) HR = paste0("0",HR)
+    if (MI < 10) MI = paste0("0",MI)
+    if (SE < 10) SE = paste0("0",SE)
+    return(paste0(HR,":",MI,":",SE))
+  }
+
   #=================================================================
   #=================================================================
   # start of loop through the participants
