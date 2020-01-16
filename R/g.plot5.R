@@ -139,7 +139,7 @@ g.plot5 = function(metadatadir=c(),dofirstpage=FALSE, viewingwindow = 1,f0=c(),f
           CLS_B[which(days_SLEEP == "SUN" | days_SLEEP == "SAT")] = CLS[2]
           # headers
           vars = c(paste("Time spent in moderate or vigorous activity (average is ",round(mean(f01,na.rm=TRUE))," minutes per day)",sep=""),
-                   paste("Total physical activity (average per day is ",round(mean(f02,na.rm=TRUE))," mg)",sep=""),
+                   paste("Total physical activity (average per day is ",round(mean(f02,na.rm=TRUE))," hours)",sep=""),
                    paste("Sleep duration (average is ",round(mean(f05,na.rm=TRUE),digits=1)," hours per night)",sep=""),
                    paste("Sleep efficiency (average is ",round(mean(f06,na.rm=TRUE)),"% per night)",sep=""),
                    paste("Duration monitor worn (hours per day)",sep="")) #(mean = ",round(mean(f07))," hours)
@@ -322,9 +322,9 @@ g.plot5 = function(metadatadir=c(),dofirstpage=FALSE, viewingwindow = 1,f0=c(),f
           title = paste("Day ",daycount,": ",
                         wdaynames[unclass(as.POSIXlt(time[t0]))$wday+1],
                         "    ",
-                        unclass(as.POSIXlt(time[t0]))$mday,"/",
-                        unclass(as.POSIXlt(time[t0]))$mon+1,"/",
-                        unclass(as.POSIXlt(time[t0]))$year+1900,sep="")
+                        unclass(as.POSIXlt(time[t0]))$year+1900,"-"
+                        unclass(as.POSIXlt(time[t0]))$mon+1,"-",
+                        unclass(as.POSIXlt(time[t0]))$mday,sep="")
           if (((t1-t0)+1) != npointsperday & t0 == 1) {
             extension = rep(NA,(npointsperday-((t1-t0)+1)))
             acc = c(extension,acc)
